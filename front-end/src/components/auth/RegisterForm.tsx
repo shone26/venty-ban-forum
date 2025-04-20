@@ -1,10 +1,11 @@
 // src/components/auth/RegisterForm.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+
 import { useForm } from '../../hooks/useForm';
 import { validateRegistrationForm } from '../../utils/validators';
 import Button from '../common/Button';
+import { useAuth } from '../../context/AuthContext';
 
 const RegisterForm: React.FC = () => {
   const { register } = useAuth();

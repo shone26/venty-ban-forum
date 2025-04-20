@@ -1,9 +1,10 @@
 // src/components/bans/BanForm.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { createBan } from '../../services/banService';
+
 import { Ban } from '../../interfaces/Ban';
+import { useAuth } from '../../context/AuthContext';
+import { createBan } from '../../services/api';
 
 const BanForm: React.FC = () => {
   const { currentUser } = useAuth();

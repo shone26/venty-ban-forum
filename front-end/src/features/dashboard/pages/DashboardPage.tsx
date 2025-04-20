@@ -1,14 +1,16 @@
 // src/features/dashboard/pages/DashboardPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllBans } from '../../../services/banService';
-import { useAuth } from '../../../hooks/useAuth';
+
 import Card from '../../../components/common/Card';
 import Spinner from '../../../components/common/Spinner';
 import Button from '../../../components/common/Button';
 
 // Dashboard components
 import StatisticsCard from '../components/StatisticsCard';
+
+import { useAuth } from '../../../context/AuthContext';
+import { getAllBans } from '../../../services/api';
 import RecentBansWidget from '../components/RecentBansWidget';
 
 const DashboardPage: React.FC = () => {

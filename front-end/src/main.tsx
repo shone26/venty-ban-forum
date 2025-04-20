@@ -1,21 +1,90 @@
-// src/index.tsx
+// src/main.tsx
+import './index.css'
+import './assets/styles/tailwind-output.css' // Make sure this path is correct
+import './assets/styles/global.scss' // Import your global styles
+
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './assets/styles/global.css';
-import reportWebVitals from './reportWebVitals';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import * as ReactDOM from 'react-dom/client';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+// Layouts
+import Layout from './components/layout/Layout';
+import AuthLayout from './layouts/AuthLayout';
 
-root.render(
+// Pages
+import DashboardPage from './features/dashboard/pages/DashboardPage';
+import BansListPage from './pages/bans/BansListPage';
+import BanDetailsPage from './pages/bans/BanDetailsPage';
+import CreateBanPage from './pages/bans/CreateBanPage';
+
+import NotFoundPage from './pages/NotFoundPage';
+
+// Context Providers
+import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import LoginPage from './features/auth/LoginPage';
+import RegisterPage from './features/auth/RegisterPage';
+
+// Define the router with TypeScript
+const router = createBrowserRouter([
+  // Auth routes
+  {
+    path: "/",
+    element: <AuthLayout />,
+    children: [
+      { 
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "register",
+        element: <RegisterPage />,
+      },
+      {
+        index: true,
+        element: <LoginPage />, // Redirect root to login page
+      },
+    ],
+  },
+  // Main app routes
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        path: "dashboard",
+        element: <DashboardPage />,
+      },
+      {
+        path: "bans",
+        element: <BansListPage />,
+      },
+      {
+        path: "bans/create",
+        element: <CreateBanPage />,
+      },
+      {
+        path: "bans/:id",
+        element: <BanDetailsPage />,
+      },
+    ],
+  },
+  // 404 page
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
+]);
+
+// Add non-null assertion for getElementById since TypeScript needs this guarantee
+const rootElement = document.getElementById("root") as HTMLElement;
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      <NotificationProvider>
+        <RouterProvider router={router} />
+      </NotificationProvider>
+    </AuthProvider>
   </React.StrictMode>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

@@ -1,8 +1,9 @@
 // src/components/auth/LoginForm.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+
 import Button from '../common/Button';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginForm: React.FC = () => {
   const { login } = useAuth();
