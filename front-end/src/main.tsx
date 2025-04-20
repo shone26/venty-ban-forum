@@ -21,7 +21,7 @@ import NotFoundPage from './pages/NotFoundPage';
 
 // Context Providers
 import { AuthProvider } from './context/AuthContext';
-import { NotificationProvider } from './context/NotificationContext';
+
 import LoginPage from './features/auth/LoginPage';
 import RegisterPage from './features/auth/RegisterPage';
 
@@ -82,9 +82,9 @@ const rootElement = document.getElementById("root") as HTMLElement;
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <AuthProvider>
-      <NotificationProvider>
+  
         <RouterProvider router={router} />
-      </NotificationProvider>
+
     </AuthProvider>
   </React.StrictMode>
 );

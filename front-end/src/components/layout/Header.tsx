@@ -1,191 +1,393 @@
-// src/components/layout/Header.tsx
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { 
+  Menu, 
+  Bell, 
+  User, 
+  LogOut, 
+  Settings, 
+  Shield, 
+  HelpCircle, 
+  ChevronDown,
+  Search,
+  Moon,
+  Sun
+} from 'lucide-react';
 
-
-const Header: React.FC = () => {
-  const { currentUser, signOut } = useAuth();
-  const navigate = useNavigate();
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Failed to sign out', error);
+const ModernHeader = () => {
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Mock user data - replace with your actual auth context
+  const user = {
+    name: 'Admin Jefferson',
+    email: 'admin@gtarp.com',
+    role: 'Administrator',
+    avatar: null // URL to avatar image or null
+  };
+  
+  // Mock notifications - replace with your actual notifications
+  const notifications = [
+    {
+      id: 1,
+      title: 'New ban appeal',
+      message: 'SkyFall_77 has submitted an appeal for review',
+      time: '5 minutes ago',
+      unread: true
+    },
+    {
+      id: 2,
+      title: 'Ban expired',
+      message: 'Temporary ban for RacerDude99 has expired',
+      time: '2 hours ago',
+      unread: true
+    },
+    {
+      id: 3,
+      title: 'New moderator added',
+      message: 'User ModeratorSam has been granted moderator privileges',
+      time: '1 day ago',
+      unread: false
     }
+  ];
+  
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    // Here you would actually implement dark mode toggle functionality
+    // document.documentElement.classList.toggle('dark');
   };
 
   return (
-    <header className="bg-gray-800 text-white">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-between py-3">
-          {/* Logo */}
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Logo and mobile menu */}
           <div className="flex items-center">
-            <Link to="/dashboard" className="text-xl font-bold">
-              GTA RP Ban System
-            </Link>
-          </div>
-
-          {/* Mobile menu button */}
-          <button
-            type="button"
-            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <span className="sr-only">Open main menu</span>
-            <svg
-              className={`${isMobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
+            <button
+              type="button"
+              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-            <svg
-              className={`${isMobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex md:items-center md:space-x-4">
-            <Link
-              to="/dashboard"
-              className="block py-2 px-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md text-base font-medium"
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/bans"
-              className="block py-2 px-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md text-base font-medium"
-            >
-              Bans
-            </Link>
-            {currentUser && ['admin', 'moderator'].includes(currentUser.role) && (
-              <Link
-                to="/bans/create"
-                className="block py-2 px-3 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md text-base font-medium"
-              >
-                New Ban
-              </Link>
-            )}
-          </nav>
-
-          {/* User profile dropdown */}
-          {currentUser && (
-            <div className="hidden md:block relative ml-3">
-              <button
-                type="button"
-                className="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              >
-                <span className="sr-only">Open user menu</span>
-                <div className="h-8 w-8 rounded-full bg-gray-500 flex items-center justify-center">
-                  <span className="text-white">{currentUser.displayName?.[0]?.toUpperCase() || '?'}</span>
+              <span className="sr-only">Open main menu</span>
+              <Menu size={20} />
+            </button>
+            
+            {/* Logo */}
+            <div className="flex-shrink-0 flex items-center ml-0 lg:ml-0">
+              <div className="block lg:hidden h-8 w-auto text-blue-600">
+                <Shield size={24} className="mr-1" />
+              </div>
+              <div className="hidden lg:block h-8 w-auto">
+                <div className="flex items-center">
+                  <Shield size={24} className="text-blue-600 mr-1" />
+                  <span className="font-bold text-gray-900">GTA RP Ban System</span>
                 </div>
+              </div>
+            </div>
+            
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:ml-6 lg:flex lg:space-x-8">
+              <a 
+                href="/dashboard" 
+                className="border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Dashboard
+              </a>
+              <a 
+                href="/bans" 
+                className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Bans
+              </a>
+              <a 
+                href="/appeals" 
+                className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Appeals
+              </a>
+              <a 
+                href="/users" 
+                className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Users
+              </a>
+              <a 
+                href="/reports" 
+                className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              >
+                Reports
+              </a>
+            </nav>
+          </div>
+          
+          {/* Search Bar and Right-side Icons */}
+          <div className="flex-1 flex items-center justify-center px-2 lg:ml-6 lg:justify-end">
+            {/* Search */}
+            <div className="max-w-lg w-full lg:max-w-xs">
+              <label htmlFor="search" className="sr-only">Search</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search size={16} className="text-gray-400" />
+                </div>
+                <input
+                  id="search"
+                  name="search"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Search"
+                  type="search"
+                />
+              </div>
+            </div>
+            
+            {/* Right side icons */}
+            <div className="ml-4 flex items-center lg:ml-6">
+              {/* Dark mode toggle */}
+              <button
+                className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none"
+                onClick={toggleDarkMode}
+              >
+                <span className="sr-only">Toggle dark mode</span>
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-
-              {isProfileMenuOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-10">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                    <p className="font-medium">{currentUser.displayName}</p>
-                    <p className="text-gray-500">{currentUser.email}</p>
-                    <p className="text-xs mt-1 text-gray-500 uppercase">Role: {currentUser.role}</p>
+              
+              {/* Notifications dropdown */}
+              <div className="ml-4 relative">
+                <button
+                  type="button"
+                  className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none"
+                  onClick={() => {
+                    setNotificationsOpen(!notificationsOpen);
+                    if (profileOpen) setProfileOpen(false);
+                  }}
+                >
+                  <span className="sr-only">View notifications</span>
+                  <div className="relative">
+                    <Bell size={20} />
+                    {notifications.some(n => n.unread) && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 flex items-center justify-center text-xs text-white">
+                        {notifications.filter(n => n.unread).length}
+                      </span>
+                    )}
                   </div>
+                </button>
+                
+                {/* Notification dropdown panel */}
+                {notificationsOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Notifications</h3>
+                    </div>
+                    <div className="max-h-72 overflow-y-auto">
+                      {notifications.length > 0 ? (
+                        notifications.map(notification => (
+                          <a
+                            key={notification.id}
+                            href="#"
+                            className={`block px-4 py-3 hover:bg-gray-50 ${notification.unread ? 'bg-blue-50' : ''}`}
+                          >
+                            <div className="flex items-start">
+                              <div className="flex-shrink-0">
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${notification.unread ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
+                                  <Bell size={16} />
+                                </div>
+                              </div>
+                              <div className="ml-3 w-0 flex-1">
+                                <p className={`text-sm font-medium text-gray-900 ${notification.unread ? 'font-semibold' : ''}`}>{notification.title}</p>
+                                <p className="mt-1 text-sm text-gray-500">{notification.message}</p>
+                                <p className="mt-1 text-xs text-gray-400">{notification.time}</p>
+                              </div>
+                            </div>
+                          </a>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                          No notifications
+                        </div>
+                      )}
+                    </div>
+                    <div className="border-t border-gray-100 px-4 py-2">
+                      <a href="#" className="text-xs font-medium text-blue-600 hover:text-blue-500">
+                        Mark all as read
+                      </a>
+                      <span className="mx-2 text-gray-300">|</span>
+                      <a href="#" className="text-xs font-medium text-blue-600 hover:text-blue-500">
+                        View all
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Profile dropdown */}
+              <div className="ml-4 relative">
+                <div>
                   <button
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    type="button"
+                    className="bg-white rounded-full flex text-sm focus:outline-none"
+                    onClick={() => {
+                      setProfileOpen(!profileOpen);
+                      if (notificationsOpen) setNotificationsOpen(false);
+                    }}
                   >
-                    Sign Out
+                    <span className="sr-only">Open user menu</span>
+                    {user.avatar ? (
+                      <img
+                        className="h-8 w-8 rounded-full"
+                        src={user.avatar}
+                        alt={user.name}
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                        <span className="text-white font-medium text-sm">
+                          {user.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <ChevronDown size={16} className="ml-1 text-gray-400 self-center" />
                   </button>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Menu */}
-        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link
-              to="/dashboard"
-              className="block px-3 py-2 rounded-md text-base font-medium text-white bg-gray-900"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/bans"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Bans
-            </Link>
-            {currentUser && ['admin', 'moderator'].includes(currentUser.role) && (
-              <Link
-                to="/bans/create"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                New Ban
-              </Link>
-            )}
-          </div>
-
-          {/* Mobile Profile menu */}
-          {currentUser && (
-            <div className="pt-4 pb-3 border-t border-gray-700">
-              <div className="flex items-center px-5">
-                <div className="flex-shrink-0">
-                  <div className="h-10 w-10 rounded-full bg-gray-500 flex items-center justify-center">
-                    <span className="text-white">{currentUser.displayName?.[0]?.toUpperCase() || '?'}</span>
+                
+                {/* Profile dropdown panel */}
+                {profileOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      <p className="text-xs font-medium text-blue-600 mt-1">{user.role}</p>
+                    </div>
+                    
+                    <a
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <User size={16} className="mr-2 text-gray-500" />
+                      Your Profile
+                    </a>
+                    
+                    <a
+                      href="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Settings size={16} className="mr-2 text-gray-500" />
+                      Settings
+                    </a>
+                    
+                    <a
+                      href="/help"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <HelpCircle size={16} className="mr-2 text-gray-500" />
+                      Help & Documentation
+                    </a>
+                    
+                    <div className="border-t border-gray-100 mt-1"></div>
+                    
+                    <a
+                      href="/logout"
+                      className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    >
+                      <LogOut size={16} className="mr-2 text-red-500" />
+                      Sign out
+                    </a>
                   </div>
-                </div>
-                <div className="ml-3">
-                  <div className="text-base font-medium text-white">{currentUser.displayName}</div>
-                  <div className="text-sm font-medium text-gray-400">{currentUser.email}</div>
-                  <div className="text-xs text-gray-400 uppercase">Role: {currentUser.role}</div>
-                </div>
-              </div>
-              <div className="mt-3 px-2 space-y-1">
-                <button
-                  onClick={() => {
-                    handleSignOut();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-400 hover:text-white hover:bg-gray-700"
-                >
-                  Sign Out
-                </button>
+                )}
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
+      
+      {/* Mobile menu, show/hide based on mobile menu state */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-white">
+          <div className="pt-2 pb-3 space-y-1">
+            <a
+              href="/dashboard"
+              className="bg-blue-50 border-blue-500 text-blue-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+            >
+              Dashboard
+            </a>
+            <a
+              href="/bans"
+              className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+            >
+              Bans
+            </a>
+            <a
+              href="/appeals"
+              className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+            >
+              Appeals
+            </a>
+            <a
+              href="/users"
+              className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+            >
+              Users
+            </a>
+            <a
+              href="/reports"
+              className="border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+            >
+              Reports
+            </a>
+          </div>
+          
+          {/* Mobile profile section */}
+          <div className="pt-4 pb-3 border-t border-gray-200">
+            <div className="flex items-center px-4">
+              <div className="flex-shrink-0">
+                {user.avatar ? (
+                  <img
+                    className="h-10 w-10 rounded-full"
+                    src={user.avatar}
+                    alt={user.name}
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
+                    <span className="text-white font-medium">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="ml-3">
+                <div className="text-base font-medium text-gray-800">{user.name}</div>
+                <div className="text-sm font-medium text-gray-500">{user.email}</div>
+              </div>
+            </div>
+            <div className="mt-3 space-y-1">
+              <a
+                href="/profile"
+                className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+              >
+                Your Profile
+              </a>
+              <a
+                href="/settings"
+                className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+              >
+                Settings
+              </a>
+              <a
+                href="/help"
+                className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+              >
+                Help & Documentation
+              </a>
+              <a
+                href="/logout"
+                className="block px-4 py-2 text-base font-medium text-red-600 hover:text-red-800 hover:bg-red-50"
+              >
+                Sign out
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
 
-export default Header;
+export default ModernHeader;
