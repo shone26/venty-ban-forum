@@ -1,23 +1,32 @@
 import axios from 'axios';
+import { useAuth } from '@clerk/clerk-react';
 
 // Create a base axios instance with default configurations
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api', // Base URL of your NestJS backend
-  timeout: 10000, // 10 seconds timeout
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api', 
+  timeout: 10000, 
   headers: {
     'Content-Type': 'application/json',
   }
 });
     
-// Request interceptor for handling common request configurations
+// Request interceptor for adding authentication token
 api.interceptors.request.use(
-  (config) => {
-    // You can add auth token if needed in the future
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
-    return config;
+  async (config) => {
+    try {
+      // Get the Clerk session token
+      const { getToken } = useAuth();
+      const token = await getToken();
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
+      return config;
+    } catch (error) {
+      console.error('Error getting authentication token:', error);
+      return config;
+    }
   },
   (error) => {
     return Promise.reject(error);
@@ -35,6 +44,21 @@ api.interceptors.response.use(
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       console.error('API Error:', error.response.data);
+      
+      // Handle specific error scenarios
+      switch (error.response.status) {
+        case 401:
+          // Unauthorized - redirect to login or refresh token
+          break;
+        case 403:
+          // Forbidden - handle access denied
+          break;
+        case 500:
+          // Server error
+          break;
+        default:
+          break;
+      }
     } else if (error.request) {
       // The request was made but no response was received
       console.error('API Error: No response received');

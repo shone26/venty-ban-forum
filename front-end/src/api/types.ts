@@ -1,7 +1,26 @@
 // Type definitions for the API entities that match the NestJS backend
 
-// Ban-related types
-export enum BanStatus {
+// Authentication-related enums
+export enum UserRole {
+    ADMIN = 'admin',
+    MODERATOR = 'moderator',
+    USER = 'user',
+  }
+  
+  // Update User interface to include roles and authentication details
+  export interface User {
+    _id: string;
+    clerkId: string;
+    username: string;
+    email: string;
+    roles: UserRole[];
+    createdAt: string;
+    updatedAt: string;
+  }
+  
+  // Rest of the existing type definitions remain the same
+  // Ban-related types
+  export enum BanStatus {
     ACTIVE = 'active',
     EXPIRED = 'expired',
     APPEALED = 'appealed',
@@ -123,21 +142,4 @@ export enum BanStatus {
     evidence?: string;
     status?: AppealStatus;
     reviewNotes?: string;
-  }
-  
-  // User-related types
-  export enum UserRole {
-    ADMIN = 'admin',
-    MODERATOR = 'moderator',
-    USER = 'user',
-  }
-  
-  export interface User {
-    _id: string;
-    clerkId: string;
-    username: string;
-    email: string;
-    roles: UserRole[];
-    createdAt: string;
-    updatedAt: string;
   }

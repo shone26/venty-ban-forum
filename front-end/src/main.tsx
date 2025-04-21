@@ -1,15 +1,18 @@
+// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { ClerkProvider } from '@clerk/clerk-react';
 import './index.css';
 
 // Import context providers
 import { ToastProvider } from './context/ToastContext';
-import { ClerkProvider } from '@clerk/clerk-react';
 
 // Import layouts
 import { Layout } from './components/layout/Layout';
 
+// Import components
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 // Import pages
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -17,62 +20,73 @@ import BanList from './pages/Bans/BanList';
 import BanDetails from './pages/Bans/BanDetails';
 import CreateBan from './pages/Bans/CreateBan';
 import NotFound from './pages/NotFound';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import LoginPage from './pages/Auth/SignIn';
+
+import SignIn from './pages/Auth/SignIn';
+import Unauthorized from './pages/Auth/Unauthorized';
 
 
-
-// Import your Publishable Key
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!PUBLISHABLE_KEY) {
-  throw new Error('Add your Clerk Publishable Key to the .env file')
-}
+// Clerk Publishable Key
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Define routes with the Layout wrapper
 const router = createBrowserRouter([
   {
-    path: "/login",
-    element: <LoginPage />
+    path: "/sign-in",
+    element: <SignIn />
   },
-
-
   {
-    element: <ProtectedRoute />,
+    path: "/unauthorized",
+    element: <Unauthorized />
+  },
+  {
+    path: "/",
+    element: <Layout />,
     children: [
       {
-      path: "/",
-      element: <Layout />,
-      children: [
-        
-
-          {
-          index: true,
-          element: <Dashboard />
-        },
-        {
-          path: "bans",
-          element: <BanList />
-        },
-        {
-          path: "bans/:id",
-          element: <BanDetails />
-        },
-        {
-          path: "bans/create",
-          element: <CreateBan />
-        },
-        {
-          path: "appeals",
-          element: <div>Appeals Page (Coming Soon)</div>
-        }
-      ]
+        index: true,
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        )
       },
-  {
-    path: "*",
-    element: <NotFound />
-  }
-]
+      {
+        path: "bans",
+        element: (
+          <ProtectedRoute adminOnly={true}>
+            <BanList />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "bans/:id",
+        element: (
+          <ProtectedRoute adminOnly={true}>
+            <BanDetails />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "bans/create",
+        element: (
+          <ProtectedRoute adminOnly={true}>
+            <CreateBan />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "appeals",
+        element: (
+          <ProtectedRoute adminOnly={true}>
+            <div>Appeals Page (Coming Soon)</div>
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "*",
+        element: <NotFound />
+      }
+    ]
   }
 ]);
 
@@ -83,14 +97,10 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <ToastProvider>
-      <ClerkProvider
-        publishableKey={PUBLISHABLE_KEY}
-        afterSignOutUrl="/login"
-        afterSignInUrl="/"
-      >
+    <ClerkProvider publishableKey={clerkPubKey}>
+      <ToastProvider>
         <RouterProvider router={router} />
-      </ClerkProvider>
-    </ToastProvider>
+      </ToastProvider>
+    </ClerkProvider>
   </React.StrictMode>
 );
