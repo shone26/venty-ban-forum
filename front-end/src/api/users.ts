@@ -20,9 +20,14 @@ const UserApi = {
 
   // Get current user
   getCurrentUser: async (): Promise<User> => {
-    const response = await api.get('/users/me');
+    const response = await api.get('/users/me', {
+      headers: {
+        'X-Clerk-ID': localStorage.getItem('clerkId') || '' // Add the clerk ID to header
+      }
+    });
+    console.log("Current user from backend:", response.data);
     return response.data;
-  }
+  },
 };
 
 export default UserApi;

@@ -56,32 +56,58 @@ export class UsersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+
+
   }
+
 
   @Get('me')
-  async getCurrentUser(@Request() req) {
-    try {
-      // In a real-world scenario, you would validate the Clerk token here
-      // For now, retrieve user by Clerk ID from headers
-      const clerkId = req.headers['x-clerk-id']; 
-
-      if (!clerkId) {
-        throw new UnauthorizedException('No user authenticated');
-      }
-
-      try {
-        // Try to find user by Clerk ID
-        return await this.usersService.findByClerkId(clerkId);
-      } catch (notFoundError) {
-        // If user not found, you might want to handle this differently
-        throw new NotFoundException('User not found');
-      }
-    } catch (error) {
-      console.error('Error fetching current user:', error);
-      throw error;
+async getCurrentUser(@Request() req) {
+  try {
+    // Get the clerkId from headers
+    const clerkId = req.headers['x-clerk-id'];
+    
+    if (!clerkId) {
+      throw new UnauthorizedException('No user authenticated');
     }
+    
+    console.log('Fetching user with clerkId:', clerkId);
+    
+    // Try to find user by Clerk ID
+    const user = await this.usersService.findByClerkId(clerkId);
+    console.log('Found user:', user);
+    
+    return user;
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    throw new NotFoundException('User not found');
   }
-}// Get current authenticated user 
+}
+
+  // @Get('me')
+  // async getCurrentUser(@Request() req) {
+  //   try {
+  //     // In a real-world scenario, you would validate the Clerk token here
+  //     // For now, retrieve user by Clerk ID from headers
+  //     const clerkId = req.headers['x-clerk-id']; 
+
+  //     if (!clerkId) {
+  //       throw new UnauthorizedException('No user authenticated');
+  //     }
+
+  //     try {
+  //       // Try to find user by Clerk ID
+  //       return await this.usersService.findByClerkId(clerkId);
+  //     } catch (notFoundError) {
+  //       // If user not found, you might want to handle this differently
+  //       throw new NotFoundException('User not found');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching current user:', error);
+  //     throw error;
+  //   }
+  }
+// Get current authenticated user 
 // @Get('me')
 // async getCurrentUser(@Request() req) {
 //   try {
@@ -98,4 +124,3 @@ export class UsersController {
 //   } catch (error) {
 //     // If user not found, you might want to handle this differently
 //     throw new NotFoundException('User not found');
-//   }
