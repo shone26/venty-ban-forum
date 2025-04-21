@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Ban, Appeal, BanStatus, AppealStatus } from '../../api/types';
 import BanApi from '../../api/bans';
 import AppealApi from '../../api/appeals';
-import { Layout } from '../../components/layout/Layout';
+
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Spinner } from '../../components/common/Spinner';
@@ -114,7 +114,6 @@ const Dashboard: React.FC = () => {
   }, []);
   
   return (
-    <Layout>
       <div className="py-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
         
@@ -264,7 +263,6 @@ const Dashboard: React.FC = () => {
           </Card>
         </div>
       </div>
-    </Layout>
   );
 };
 

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // src/bans/bans.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';

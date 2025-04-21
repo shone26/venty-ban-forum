@@ -4,7 +4,7 @@ import { Button } from '../components/common/Button';
 
 const NotFound: React.FC = () => {
   return (
-    <Layout>
+    
       <div className="py-12 flex flex-col items-center">
         <div className="max-w-md text-center">
           <h1 className="text-9xl font-extrabold text-gray-900">404</h1>
@@ -17,7 +17,7 @@ const NotFound: React.FC = () => {
           </Button>
         </div>
       </div>
-    </Layout>
+    
   );
 };
 

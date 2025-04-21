@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ban, BanQueryParams } from '../../api/types';
 import BanApi from '../../api/bans';
-import { Layout } from '../../components/layout/Layout';
+
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { SearchBar } from '../../components/common/SearchBar';
@@ -176,7 +176,7 @@ const BanList: React.FC = () => {
   ];
   
   return (
-    <Layout>
+    
       <div className="py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Player Bans</h1>
@@ -230,7 +230,7 @@ const BanList: React.FC = () => {
           </div>
         </Card>
       </div>
-    </Layout>
+    
   );
 };
 

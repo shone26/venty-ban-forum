@@ -37,7 +37,7 @@ const CreateBan: React.FC = () => {
   };
   
   return (
-    <Layout>
+    
       <div className="py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Create New Ban</h1>
@@ -52,7 +52,7 @@ const CreateBan: React.FC = () => {
           isSubmitting={isSubmitting}
         />
       </div>
-    </Layout>
+    
   );
 };
 

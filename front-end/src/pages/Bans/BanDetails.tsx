@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Ban, AppealStatus, BanStatus } from '../../api/types';
 import BanApi from '../../api/bans';
 import AppealApi from '../../api/appeals';
-import { Layout } from '../../components/layout/Layout';
+
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 
@@ -14,7 +14,7 @@ import { AppealForm } from '../../components/bans/AppealForm';
 import { EvidenceGallery } from '../../components/bans/EvidenceGallery';
 import { formatDate } from '../../utils/formatDate';
 import { useToast } from '../../context/ToastContext';
-import { Modal } from '../../components/common/Modals';
+import { Modal } from '@/components/common/Modals';
 
 const BanDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -157,18 +157,18 @@ const BanDetails: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <Layout>
+      
         <div className="flex justify-center items-center min-h-[60vh]">
           <Spinner size="lg" />
         </div>
-      </Layout>
+      
     );
   }
   
   // Error state
   if (error || !ban) {
     return (
-      <Layout>
+      
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             {error || 'Ban not found'}
@@ -180,7 +180,7 @@ const BanDetails: React.FC = () => {
             Back to Ban List
           </Button>
         </div>
-      </Layout>
+      
     );
   }
   
@@ -191,7 +191,7 @@ const BanDetails: React.FC = () => {
     ban.status === BanStatus.ACTIVE;
   
   return (
-    <Layout>
+    <div>
       <div className="py-6">
         <div className="flex flex-col md:flex-row justify-between items-start mb-6">
           <div>
@@ -426,7 +426,7 @@ const BanDetails: React.FC = () => {
           </div>
         </div>
       </Modal>
-    </Layout>
+    </div>
   );
 };
 

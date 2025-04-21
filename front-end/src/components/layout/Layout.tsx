@@ -1,18 +1,16 @@
+// src/components/layout/Layout.tsx
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-100 w-full">
       <Header />
-      <main className="flex-grow py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {children}
+      <main className="flex-grow py-6 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <Outlet />
         </div>
       </main>
       <Footer />
