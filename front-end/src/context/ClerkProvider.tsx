@@ -1,6 +1,5 @@
-// src/context/ClerkProvider.tsx
+// src/context/ClerkProvider.tsx - Update with proper token handling
 import { ClerkProvider as ClerkProviderOriginal } from '@clerk/clerk-react';
-import { dark } from '@clerk/themes';
 import { ReactNode, useEffect } from 'react';
 
 interface ClerkProviderProps {
@@ -11,23 +10,29 @@ const ClerkProvider = ({ children }: ClerkProviderProps) => {
   const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
   useEffect(() => {
-    // Listen for authentication token changes
-    const handleClerkTokenChange = async () => {
-      const tokens = JSON.parse(localStorage.getItem('clerk-tokens') || '{}');
-      if (tokens?.jwt) {
-        localStorage.setItem('clerk-auth-token', tokens.jwt);
+    // Properly synchronize Clerk tokens with localStorage
+    const handleClerkTokenChange = () => {
+      const token = localStorage.getItem('clerk-db-jwt');
+      if (token) {
+        localStorage.setItem('clerk-auth-token', token);
       } else {
-        localStorage.removeItem('clerk-auth-token');
+        // Try to get from Clerk's session if available
+        const clerkSession = JSON.parse(localStorage.getItem('clerk-session') || '{}');
+        if (clerkSession?.jwt) {
+          localStorage.setItem('clerk-auth-token', clerkSession.jwt);
+        } else {
+          localStorage.removeItem('clerk-auth-token');
+        }
       }
     };
 
-    window.addEventListener('clerk-tokens', handleClerkTokenChange);
+    window.addEventListener('clerk-session', handleClerkTokenChange);
     
     // Initial token check
     handleClerkTokenChange();
 
     return () => {
-      window.removeEventListener('clerk-tokens', handleClerkTokenChange);
+      window.removeEventListener('clerk-session', handleClerkTokenChange);
     };
   }, []);
 
@@ -46,15 +51,8 @@ const ClerkProvider = ({ children }: ClerkProviderProps) => {
   return (
     <ClerkProviderOriginal
       publishableKey={clerkPubKey}
-      appearance={{
-        baseTheme: dark,
-        elements: {
-          card: 'shadow-xl border border-gray-700 rounded-lg',
-          formButtonPrimary: 'bg-primary-600 hover:bg-primary-700',
-          formFieldInput: 'bg-gray-800 border-gray-700 text-white',
-          footerActionLink: 'text-primary-500 hover:text-primary-400',
-        },
-      }}
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
     >
       {children}
     </ClerkProviderOriginal>

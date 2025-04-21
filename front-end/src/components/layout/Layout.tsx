@@ -15,8 +15,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // For auth pages, use a simpler layout
   if (isAuthPage) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <main className="flex-grow">{children}</main>
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+          {children}
+        </main>
       </div>
     );
   }
@@ -24,8 +26,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-      <main className="flex-grow py-8">
-        <div className="container mx-auto px-4">
+      <main className="flex-grow py-6 sm:py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           {children}
         </div>
       </main>

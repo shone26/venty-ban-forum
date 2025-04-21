@@ -1,16 +1,21 @@
-import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthGuard } from './guards/auth.guard';
+/* eslint-disable prettier/prettier */
+
+
+import { Controller, Get } from '@nestjs/common';
+ // Corrected import path
+
+import { clerkClient } from '@clerk/clerk-sdk-node';
+import { Public } from '../decorators/public.decorator';
+
+
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+    
+    @Public()
+    @Get('users')
+    getHello(): Promise<any> {
+        return clerkClient.users.getUserList();
+    }
 
-  @Get('profile')
-  @UseGuards(AuthGuard)
-  getProfile(@Req() req) {
-    return req.user;
-  }
-
-  // Other auth endpoints as needed
 }

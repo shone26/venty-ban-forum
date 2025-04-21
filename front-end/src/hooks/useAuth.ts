@@ -14,14 +14,28 @@ export const useAuth = () => {
     const fetchUserProfile = async () => {
       if (isClerkLoaded && clerkUser) {
         try {
+          // Make sure the token is properly set in localStorage
+          const token = localStorage.getItem('clerk-auth-token');
+          if (!token) {
+            const session = await clerkUser.session;
+            if (session) {
+              localStorage.setItem('clerk-auth-token', session.jwt);
+            }
+          }
+          
           const response = await axios.get('/auth/profile');
           setUser(response.data);
         } catch (error) {
           console.error('Error fetching user profile:', error);
+          // If 401 error, we should clear the token
+          if (axios.isAxiosError(error) && error.response?.status === 401) {
+            localStorage.removeItem('clerk-auth-token');
+          }
         } finally {
           setIsLoading(false);
         }
       } else if (isClerkLoaded && !clerkUser) {
+        localStorage.removeItem('clerk-auth-token');
         setUser(null);
         setIsLoading(false);
       }
@@ -36,8 +50,8 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    await signOut();
     localStorage.removeItem('clerk-auth-token');
+    await signOut();
     setUser(null);
   };
 

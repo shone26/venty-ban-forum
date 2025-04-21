@@ -1,28 +1,19 @@
 /* eslint-disable prettier/prettier */
-// src/auth/auth.module.ts
+
 import { Module } from '@nestjs/common';
-import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClerkStrategy } from './clerk.strategy';
-import { AuthService } from './auth.service';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule } from '@nestjs/config';
 import { AuthController } from './auth.controller';
+
+import { AuthService } from './auth.service';
+import { ClerkClientProvider } from '../provider/clerk-client.provider';
 
 
 @Module({
-  imports: [
-    PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '1h' },
-      }),
-    }),
-  ],
-  providers: [ClerkStrategy, AuthService],
+  imports: [PassportModule, ConfigModule],
+  providers: [ClerkStrategy, ClerkClientProvider, AuthService],
+  exports: [PassportModule],
   controllers: [AuthController],
-  exports: [AuthService],
 })
 export class AuthModule {}

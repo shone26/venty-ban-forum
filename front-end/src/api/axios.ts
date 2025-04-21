@@ -26,15 +26,13 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle errors
+// Add response interceptor to handle authentication errors
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    const { response } = error;
-    
-    // Handle authentication errors
-    if (response && response.status === 401) {
-      // Redirect to login or refresh token
+    if (error.response && error.response.status === 401) {
+      // Clear token and redirect to login
+      localStorage.removeItem('clerk-auth-token');
       window.location.href = '/login';
     }
     
@@ -42,4 +40,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export default axiosInstance;
+export default axiosInstance;   

@@ -1,12 +1,12 @@
-// src/auth/auth.service.ts
+/* eslint-disable prettier/prettier */
+import { clerkClient } from '@clerk/clerk-sdk-node';
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Public } from '../decorators/public.decorator';
 
 @Injectable()
+@Public()
 export class AuthService {
-  constructor(
-    private jwtService: JwtService,
-  ) {}
-
-  // Auth service methods as needed
+    async getAllUsers() {
+        return clerkClient.users.getUserList();
+    }
 }
