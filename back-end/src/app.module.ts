@@ -1,4 +1,4 @@
-// src/app.module.ts
+// src/app.module.ts - Updated Version
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -11,20 +11,29 @@ import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    // Configuration
+    // Configuration - Make sure this loads first with proper options
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     
-    // Database
+    // Database - Using forRootAsync with proper error handling
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGODB_URI');
+        
+        if (!uri) {
+          throw new Error('MONGODB_URI is not defined in environment variables');
+        }
+        
+        return {
+          uri,
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        };
+      },
     }),
     
     // Feature modules
