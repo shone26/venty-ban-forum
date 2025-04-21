@@ -2,16 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useUser, useClerk } from '@clerk/clerk-react';
 import { User, UserRole } from '../api/types';
+import UserApi from '../api/users'; 
 import api from '../api/axios';
 
-interface UseAuthHook {
-  user: User | null;
-  isLoading: boolean;
-  isAdmin: boolean;
-  signOut: () => Promise<void>;
-}
-
-export const useAuth = (): UseAuthHook => {
+export const useAuth = () => {
   const { user: clerkUser, isLoaded } = useUser();
   const clerk = useClerk();
   const [user, setUser] = useState<User | null>(null);
@@ -26,6 +20,12 @@ export const useAuth = (): UseAuthHook => {
       }
 
       try {
+        // Get token and set it for the API
+        const token = await clerk.session?.getToken();
+        if (token) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+
         // Prepare user data for backend
         const userData = {
           clerkId: clerkUser.id,
@@ -37,21 +37,12 @@ export const useAuth = (): UseAuthHook => {
           roles: [UserRole.USER] // Default role
         };
 
-        // Attempt to create or get user
-        const response = await api.post('/users', userData);
-        
-        setUser(response.data);
+        // Create or update user in backend
+        const userResponse = await UserApi.createUser(userData);
+        setUser(userResponse);
       } catch (error) {
         console.error('Error syncing user with backend:', error);
-        
-        try {
-          // If creation fails, try fetching existing user
-          const response = await api.get('/users/me');
-          setUser(response.data);
-        } catch (fetchError) {
-          console.error('Error fetching user:', fetchError);
-          setUser(null);
-        }
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -62,12 +53,13 @@ export const useAuth = (): UseAuthHook => {
 
   const signOut = async () => {
     await clerk.signOut();
+    setUser(null);
   };
 
   return {
     user,
     isLoading,
-    isAdmin: user?.roles.includes(UserRole.ADMIN) || false,
+    isAdmin: user?.roles?.includes(UserRole.ADMIN) || false,
     signOut
   };
 };

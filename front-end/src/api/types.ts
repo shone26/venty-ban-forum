@@ -9,7 +9,6 @@ export enum UserRole {
   
   // Update User interface to include roles and authentication details
   export interface User {
-    _id: string;
     clerkId: string;
     username: string;
     email: string;
