@@ -1,18 +1,19 @@
 /* eslint-disable prettier/prettier */
 // src/auth/guards/auth.guard.ts
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
+import { Injectable, ExecutionContext } from '@nestjs/common';
 
 @Injectable()
-export class AuthGuard extends PassportAuthGuard('clerk') {
+export class AuthGuard {
   canActivate(context: ExecutionContext) {
-    return super.canActivate(context);
+    return true; // Always allow access
   }
 
   handleRequest<T = any>(err: any, user: T, info: any): T {
-    if (err || !user) {
-      throw err || new UnauthorizedException('Authentication failed');
-    }
-    return user;
+    // Return a mock user
+    return {
+      userId: 'mock-user-id',
+      username: 'Mock User',
+      roles: ['admin', 'moderator', 'user'],
+    } as unknown as T;
   }
 }

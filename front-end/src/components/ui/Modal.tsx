@@ -1,5 +1,5 @@
 // src/components/ui/Modal.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -16,6 +16,33 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md',
 }) => {
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+  
+  // Handle escape key press
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isOpen, onClose]);
+  
   if (!isOpen) return null;
   
   const sizeClasses = {
@@ -26,26 +53,43 @@ export const Modal: React.FC<ModalProps> = ({
   };
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div 
+      className="fixed inset-0 z-50 overflow-y-auto"
+      aria-labelledby="modal-title" 
+      role="dialog" 
+      aria-modal="true"
+    >
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        {/* Background overlay */}
         <div 
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+          className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity backdrop-blur-sm" 
           aria-hidden="true"
           onClick={onClose}
         ></div>
 
+        {/* Modal positioning */}
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className={`inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle ${sizeClasses[size]} sm:w-full`}>
-          <div className="bg-white px-4 py-5 sm:p-6">
+        {/* Modal content */}
+        <div 
+          className={`
+            inline-block align-bottom sm:align-middle bg-white dark:bg-dark-bg-secondary
+            rounded-lg text-left overflow-hidden shadow-xl transform transition-all
+            sm:my-8 sm:w-full ${sizeClasses[size]} relative
+          `}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="bg-white dark:bg-dark-bg-secondary px-4 py-5 sm:p-6 border-b dark:border-dark-border">
             <div className="flex items-start justify-between">
-              <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-dark-text-primary" id="modal-title">
                 {title}
               </h3>
               <button
                 type="button"
-                className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-white dark:bg-dark-bg-secondary rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 p-1"
                 onClick={onClose}
+                aria-label="Close"
               >
                 <span className="sr-only">Close</span>
                 <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -53,9 +97,11 @@ export const Modal: React.FC<ModalProps> = ({
                 </svg>
               </button>
             </div>
-            <div className="mt-4">
-              {children}
-            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="bg-white dark:bg-dark-bg-secondary text-gray-900 dark:text-dark-text-primary">
+            {children}
           </div>
         </div>
       </div>

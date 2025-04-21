@@ -19,17 +19,17 @@ export const Alert: React.FC<AlertProps> = ({
   className = '',
 }) => {
   const variantStyles = {
-    info: 'bg-blue-50 text-blue-800 border-blue-200',
-    success: 'bg-green-50 text-green-800 border-green-200',
-    warning: 'bg-yellow-50 text-yellow-800 border-yellow-200',
-    error: 'bg-red-50 text-red-800 border-red-200',
+    info: 'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    success: 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800',
+    warning: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
+    error: 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800',
   };
 
   const iconStyles = {
-    info: 'text-blue-400',
-    success: 'text-green-400',
-    warning: 'text-yellow-400',
-    error: 'text-red-400',
+    info: 'text-blue-400 dark:text-blue-500',
+    success: 'text-green-400 dark:text-green-500',
+    warning: 'text-yellow-400 dark:text-yellow-500',
+    error: 'text-red-400 dark:text-red-500',
   };
 
   return (
@@ -57,7 +57,7 @@ export const Alert: React.FC<AlertProps> = ({
             </svg>
           )}
         </div>
-        <div className="ml-3">
+        <div className="ml-3 flex-1">
           {title && <h3 className="text-sm font-medium">{title}</h3>}
           <div className="text-sm">{message}</div>
         </div>
@@ -66,13 +66,14 @@ export const Alert: React.FC<AlertProps> = ({
             <div className="-mx-1.5 -my-1.5">
               <button
                 type="button"
-                className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  variant === 'info' ? 'text-blue-500 hover:bg-blue-100 focus:ring-blue-500' :
-                  variant === 'success' ? 'text-green-500 hover:bg-green-100 focus:ring-green-500' :
-                  variant === 'warning' ? 'text-yellow-500 hover:bg-yellow-100 focus:ring-yellow-500' :
-                  'text-red-500 hover:bg-red-100 focus:ring-red-500'
+                className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 ${
+                  variant === 'info' ? `text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/50 focus:ring-blue-500` :
+                  variant === 'success' ? `text-green-500 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-800/50 focus:ring-green-500` :
+                  variant === 'warning' ? `text-yellow-500 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-800/50 focus:ring-yellow-500` :
+                  `text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800/50 focus:ring-red-500`
                 }`}
                 onClick={onClose}
+                aria-label="Dismiss"
               >
                 <span className="sr-only">Dismiss</span>
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

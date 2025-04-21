@@ -1,5 +1,5 @@
 // src/services/api.ts
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { 
   Ban, 
   BanQueryParams, 
@@ -9,7 +9,7 @@ import {
   AppealsResponse
 } from '../types';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 // Create axios instance
 const apiClient = axios.create({
@@ -43,53 +43,31 @@ export const bansApi = {
     return response.data;
   },
 
-  createBan: async (banData: Partial<Ban>): Promise<Ban> => {
-    const formData = new FormData();
+  createBan: async (banData: FormData | Partial<Ban>): Promise<Ban> => {
+    // If the banData is a FormData, use it directly with appropriate headers
+    const isFormData = banData instanceof FormData;
     
-    // Append all text fields
-    Object.entries(banData).forEach(([key, value]) => {
-      if (key !== 'evidencePhotos') {
-        formData.append(key, value as string);
-      }
-    });
-    
-    // Append photos if they exist
-    if (banData.evidencePhotos && banData.evidencePhotos.length > 0) {
-      banData.evidencePhotos.forEach((photo, index) => {
-        formData.append(`evidencePhotos`, photo);
-      });
-    }
-    
-    const response = await apiClient.post('/bans', formData, {
+    const config: AxiosRequestConfig = {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
       },
-    });
+    };
+    
+    const response = await apiClient.post('/bans', banData, config);
     return response.data;
   },
 
-  updateBan: async (id: string, banData: Partial<Ban>): Promise<Ban> => {
-    const formData = new FormData();
+  updateBan: async (id: string, banData: FormData | Partial<Ban>): Promise<Ban> => {
+    // If the banData is a FormData, use it directly with appropriate headers
+    const isFormData = banData instanceof FormData;
     
-    // Append all text fields
-    Object.entries(banData).forEach(([key, value]) => {
-      if (key !== 'evidencePhotos') {
-        formData.append(key, value as string);
-      }
-    });
-    
-    // Append photos if they exist
-    if (banData.evidencePhotos && banData.evidencePhotos.length > 0) {
-      banData.evidencePhotos.forEach((photo, index) => {
-        formData.append(`evidencePhotos`, photo);
-      });
-    }
-    
-    const response = await apiClient.patch(`/bans/${id}`, formData, {
+    const config: AxiosRequestConfig = {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
       },
-    });
+    };
+    
+    const response = await apiClient.patch(`/bans/${id}`, banData, config);
     return response.data;
   },
 
@@ -116,33 +94,31 @@ export const appealsApi = {
     return response.data;
   },
 
-  createAppeal: async (appealData: Partial<Appeal>): Promise<Appeal> => {
-    const formData = new FormData();
+  createAppeal: async (appealData: FormData | Partial<Appeal>): Promise<Appeal> => {
+    // If the appealData is a FormData, use it directly with appropriate headers
+    const isFormData = appealData instanceof FormData;
     
-    // Append all text fields
-    Object.entries(appealData).forEach(([key, value]) => {
-      if (key !== 'evidencePhotos') {
-        formData.append(key, value as string);
-      }
-    });
-    
-    // Append photos if they exist
-    if (appealData.evidencePhotos && appealData.evidencePhotos.length > 0) {
-      appealData.evidencePhotos.forEach((photo, index) => {
-        formData.append(`evidencePhotos`, photo);
-      });
-    }
-    
-    const response = await apiClient.post('/appeals', formData, {
+    const config: AxiosRequestConfig = {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
       },
-    });
+    };
+    
+    const response = await apiClient.post('/appeals', appealData, config);
     return response.data;
   },
 
-  updateAppeal: async (id: string, appealData: Partial<Appeal>): Promise<Appeal> => {
-    const response = await apiClient.patch(`/appeals/${id}`, appealData);
+  updateAppeal: async (id: string, appealData: FormData | Partial<Appeal>): Promise<Appeal> => {
+    // If the appealData is a FormData, use it directly with appropriate headers
+    const isFormData = appealData instanceof FormData;
+    
+    const config: AxiosRequestConfig = {
+      headers: {
+        'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+      },
+    };
+    
+    const response = await apiClient.patch(`/appeals/${id}`, appealData, config);
     return response.data;
   },
 

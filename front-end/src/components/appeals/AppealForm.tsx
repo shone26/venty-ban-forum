@@ -38,12 +38,24 @@ export const AppealForm: React.FC<AppealFormProps> = ({
     setError(null);
 
     try {
-      const submitData = {
-        ...formData,
-        evidencePhotos: evidenceFiles,
-      };
+      // Create FormData to properly handle file uploads
+      const formDataToSend = new FormData();
+      
+      // Append text fields
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formDataToSend.append(key, String(value));
+        }
+      });
+      
+      // Append photo files
+      if (evidenceFiles.length > 0) {
+        evidenceFiles.forEach(file => {
+          formDataToSend.append('evidencePhotos', file);
+        });
+      }
 
-      const response = await appealsApi.createAppeal(submitData);
+      const response = await appealsApi.createAppeal(formDataToSend);
 
       if (onSuccess) {
         onSuccess(response);
@@ -67,7 +79,7 @@ export const AppealForm: React.FC<AppealFormProps> = ({
       )}
 
       <div>
-        <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Reason for Appeal <span className="text-red-500">*</span>
         </label>
         <textarea
@@ -78,12 +90,12 @@ export const AppealForm: React.FC<AppealFormProps> = ({
           required
           rows={3}
           placeholder="Explain why you believe this ban should be appealed"
-          className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 bg-white dark:bg-dark-bg-tertiary text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
         />
       </div>
       
       <div>
-        <label htmlFor="evidence" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="evidence" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Text Evidence <span className="text-red-500">*</span>
         </label>
         <textarea
@@ -94,12 +106,12 @@ export const AppealForm: React.FC<AppealFormProps> = ({
           required
           rows={5}
           placeholder="Provide evidence to support your appeal (explanation, context, etc.)"
-          className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 bg-white dark:bg-dark-bg-tertiary text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
         />
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Photo Evidence
         </label>
         <PhotoUpload
@@ -108,7 +120,7 @@ export const AppealForm: React.FC<AppealFormProps> = ({
           multiple={true}
           maxFiles={5}
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           Upload screenshots or other images that support your appeal (optional)
         </p>
       </div>

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -15,17 +16,12 @@ async function bootstrap() {
   // Set global prefix
   app.setGlobalPrefix('api');
   
-  // Enable CORS
-  app.enableCors();
-  
-  // Apply global pipes
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
+  // Enable CORS with more specific options
+  app.enableCors({
+    origin: 'http://localhost:3001', // Your frontend URL
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
   
   // Apply global filters
   app.useGlobalFilters(new HttpExceptionFilter());

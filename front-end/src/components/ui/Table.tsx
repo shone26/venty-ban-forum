@@ -29,15 +29,15 @@ export function Table<T>({
 }: TableProps<T>) {
   return (
     <div className={`overflow-x-auto ${className}`}>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead className="bg-gray-50 dark:bg-dark-bg-tertiary">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.id}
                 scope="col"
-                className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                  column.sortable && onSort ? 'cursor-pointer' : ''
+                className={`px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${
+                  column.sortable && onSort ? 'cursor-pointer hover:text-gray-700 dark:hover:text-gray-300' : ''
                 }`}
                 onClick={() => {
                   if (column.sortable && onSort) {
@@ -65,10 +65,10 @@ export function Table<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white dark:bg-dark-bg-secondary divide-y divide-gray-200 dark:divide-gray-700">
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-6 py-4 text-center text-sm text-gray-500">
+              <td colSpan={columns.length} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                 No data available
               </td>
             </tr>
@@ -76,11 +76,11 @@ export function Table<T>({
             data.map((item, index) => (
               <tr 
                 key={index} 
-                className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
+                className={onRowClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg-tertiary transition-colors' : ''}
                 onClick={() => onRowClick && onRowClick(item)}
               >
                 {columns.map((column) => (
-                  <td key={column.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td key={column.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {column.cell(item)}
                   </td>
                 ))}

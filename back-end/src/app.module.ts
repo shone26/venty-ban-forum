@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-// src/app.module.ts - Updated Version
+// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -9,7 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { BansModule } from './bans/bans.module';
 import { AppealsModule } from './appeals/appeals.module';
 import { UsersModule } from './users/users.module';
-import { ClerkAuthGuard } from './auth/clerk-auth.guard';
 
 @Module({
   imports: [
@@ -45,11 +44,6 @@ import { ClerkAuthGuard } from './auth/clerk-auth.guard';
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService,
-    {
-      provide: 'APP_GUARD',
-      useClass: ClerkAuthGuard,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

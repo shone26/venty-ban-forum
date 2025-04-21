@@ -1,21 +1,14 @@
 /* eslint-disable prettier/prettier */
-
-
+// src/auth/auth.controller.ts
 import { Controller, Get } from '@nestjs/common';
- // Corrected import path
-
-import { clerkClient } from '@clerk/clerk-sdk-node';
-import { Public } from '../decorators/public.decorator';
-
-
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-    
-    @Public()
-    @Get('users')
-    getHello(): Promise<any> {
-        return clerkClient.users.getUserList();
-    }
-
+  constructor(private readonly authService: AuthService) {}
+  
+  @Get('users')
+  getHello(): Promise<any> {
+    return this.authService.getAllUsers();
+  }
 }

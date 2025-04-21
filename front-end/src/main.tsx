@@ -4,6 +4,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import * as ReactDOM from 'react-dom/client';
 import './index.css';
 
+
+
 // Layout
 import RootLayout from './components/RootLayout';
 
@@ -12,6 +14,7 @@ import BanListPage from './pages/bans/BanListPage';
 import BanDetailsPage from './pages/bans/BanDetailsPage';
 import BanFormPage from './pages/bans/BanFormPage';
 import AppealListPage from './pages/appeals/AppealListPage';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Define the router with TypeScript
 const router = createBrowserRouter([
@@ -51,6 +54,8 @@ const router = createBrowserRouter([
 const rootElement = document.getElementById("root") as HTMLElement;
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ThemeProvider>
+      <RouterProvider router={router} />
+    </ThemeProvider>
   </React.StrictMode>
 );

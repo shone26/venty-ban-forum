@@ -1,12 +1,17 @@
 /* eslint-disable prettier/prettier */
-import { clerkClient } from '@clerk/clerk-sdk-node';
+// src/auth/auth.service.ts
 import { Injectable } from '@nestjs/common';
-import { Public } from '../decorators/public.decorator';
 
 @Injectable()
-@Public()
 export class AuthService {
-    async getAllUsers() {
-        return clerkClient.users.getUserList();
-    }
+  async getAllUsers() {
+    return [
+      {
+        id: 'mock-user-id',
+        username: 'Mock User',
+        email: 'mock@example.com',
+        roles: ['admin', 'moderator', 'user'],
+      }
+    ];
+  }
 }
