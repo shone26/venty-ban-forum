@@ -5,7 +5,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import { BansModule } from './bans/bans.module';
 import { AppealsModule } from './appeals/appeals.module';
 import { UsersModule } from './users/users.module';
@@ -38,7 +37,6 @@ import { UsersModule } from './users/users.module';
     }),
     
     // Feature modules
-    AuthModule,
     BansModule,
     AppealsModule,
     UsersModule,
