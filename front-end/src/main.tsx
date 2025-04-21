@@ -16,6 +16,7 @@ import BanList from './pages/Bans/BanList';
 import BanDetails from './pages/Bans/BanDetails';
 import CreateBan from './pages/Bans/CreateBan';
 import NotFound from './pages/NotFound';
+import { EvidenceGallery } from './components/bans/EvidenceGallery';
 
 // Define routes with the Layout wrapper
 const router = createBrowserRouter([
@@ -43,6 +44,7 @@ const router = createBrowserRouter([
         path: "appeals",
         element: <div>Appeals Page (Coming Soon)</div>
       },
+
       {
         path: "*",
         element: <NotFound />

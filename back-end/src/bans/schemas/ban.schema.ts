@@ -22,7 +22,7 @@ export class Ban extends Document {
 
   @Prop({ required: true })
   steamId: string;
-  
+
   @Prop()
   discordId?: string;
 
@@ -34,6 +34,10 @@ export class Ban extends Document {
 
   @Prop({ required: true })
   evidence: string;
+
+  // In the Ban schema
+  @Prop({ type: [String], default: [] })
+  evidencePaths: string[];
 
   @Prop({ required: true, enum: BanDuration, default: BanDuration.TEMPORARY })
   durationType: BanDuration;

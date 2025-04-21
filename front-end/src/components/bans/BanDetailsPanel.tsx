@@ -1,3 +1,4 @@
+// src/components/bans/BanDetailsPanel.tsx
 import React from 'react';
 import { Ban } from '../../api/types';
 import { Card } from '../common/Card';
@@ -31,7 +32,8 @@ export const BanDetailsPanel: React.FC<BanDetailsPanelProps> = ({
   };
 
   // Check if we have evidence media
-  const hasEvidenceMedia = ban.evidencePaths && Array.isArray(ban.evidencePaths) && ban.evidencePaths.length > 0;
+  const hasEvidenceMedia = ban.evidencePaths && 
+    (Array.isArray(ban.evidencePaths) ? ban.evidencePaths.length > 0 : ban.evidencePaths.trim() !== '');
   
   return (
     <Card className={className}>
@@ -115,7 +117,7 @@ export const BanDetailsPanel: React.FC<BanDetailsPanelProps> = ({
         </div>
         
         <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-1">Evidence</h3>
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Evidence Description</h3>
           <div className="bg-gray-50 p-4 rounded-md">
             <p className="whitespace-pre-line">{ban.evidence}</p>
           </div>
@@ -123,13 +125,13 @@ export const BanDetailsPanel: React.FC<BanDetailsPanelProps> = ({
         
         {/* Evidence Media Gallery - Only display if we have evidence media */}
         {hasEvidenceMedia && (
-          <div className="mb-6">
+          <div className="mb-6 border-t pt-6">
             <EvidenceGallery evidencePaths={ban.evidencePaths} />
           </div>
         )}
         
         {ban.notes && (
-          <div>
+          <div className="border-t pt-6">
             <h3 className="text-sm font-medium text-gray-500 mb-1">Admin Notes</h3>
             <div className="bg-gray-50 p-4 rounded-md">
               <p className="whitespace-pre-line">{ban.notes}</p>

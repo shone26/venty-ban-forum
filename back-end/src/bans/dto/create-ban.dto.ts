@@ -1,5 +1,6 @@
+/* eslint-disable prettier/prettier */
 // src/bans/dto/create-ban.dto.ts
-import { IsEnum, IsOptional, IsString, IsNumber, IsNotEmpty, ValidateIf } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsNumber, IsNotEmpty, ValidateIf, IsArray } from 'class-validator';
 import { BanDuration } from '../schemas/ban.schema';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -33,6 +34,11 @@ export class CreateBanDto {
   @IsString()
   @IsNotEmpty()
   evidence: string;
+
+  @IsOptional()
+@IsArray()
+@IsString({ each: true })
+evidencePaths?: string[];
 
   @ApiProperty({ 
     description: 'Type of ban duration',

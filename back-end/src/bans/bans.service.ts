@@ -23,6 +23,10 @@ export class BansService {
       expiresAt.setDate(expiresAt.getDate() + createBanDto.durationDays);
       createdBan.expiresAt = expiresAt;
     }
+
+    if (createBanDto.evidencePaths && Array.isArray(createBanDto.evidencePaths)) {
+      createdBan.evidencePaths = createBanDto.evidencePaths.filter(path => path.trim() !== '');
+    }
     
     return createdBan.save();
   }

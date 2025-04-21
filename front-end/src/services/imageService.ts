@@ -1,4 +1,4 @@
-// This service handles the display and management of evidence images and videos
+// src/services/imageService.ts
 
 /**
  * Check if the provided URL is a video
@@ -19,42 +19,6 @@ export const isVideoUrl = (url: string): boolean => {
   };
   
   /**
-   * Get the full URL for an image or video path
-   * @param path - The path to the image or video
-   * @returns The complete URL to access the media
-   */
-  export const getMediaUrl = (path: string): string => {
-    if (!path) return '';
-    
-    // If the path is already an absolute URL, return it as is
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-    
-    // For YouTube URLs that are shortened (youtu.be)
-    if (path.includes('youtu.be/')) {
-      const videoId = path.split('youtu.be/')[1];
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-    
-    // For YouTube URLs
-    if (path.includes('youtube.com/watch?v=')) {
-      const videoId = new URL(path).searchParams.get('v');
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-    
-    // For Vimeo URLs
-    if (path.includes('vimeo.com/')) {
-      const videoId = path.split('vimeo.com/')[1];
-      return `https://player.vimeo.com/video/${videoId}`;
-    }
-    
-    // Otherwise, construct the URL using the backend address
-    // This assumes your backend serves static files at the /uploads path
-    return `http://localhost:3000/uploads/${path}`;
-  };
-  
-  /**
    * Check if the provided path is a valid image type
    * @param path - The path to check
    * @returns Boolean indicating if the path is an image
@@ -66,7 +30,54 @@ export const isVideoUrl = (url: string): boolean => {
     if (isVideoUrl(path)) return false;
     
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
-    return imageExtensions.some(ext => path.toLowerCase().endsWith(ext));
+    
+    // Check if URL has an image extension
+    const hasImageExtension = imageExtensions.some(ext => path.toLowerCase().endsWith(ext));
+    
+    // For URLs without explicit extensions, assume it's an image if it's not a video
+    // This handles cases like generic URLs or CDN links without extensions
+    return hasImageExtension || (path.startsWith('http') && !isVideoUrl(path));
+  };
+  
+  /**
+   * Get the full URL for an image or video path
+   * @param path - The path to the image or video
+   * @returns The complete URL to access the media
+   */
+  export const getMediaUrl = (path: string): string => {
+    if (!path) return getPlaceholderUrl();
+    
+    try {
+      // If the path is already an absolute URL, return it as is
+      if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+      }
+      
+      // For YouTube URLs that are shortened (youtu.be)
+      if (path.includes('youtu.be/')) {
+        const videoId = path.split('youtu.be/')[1].split('?')[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      
+      // For YouTube URLs
+      if (path.includes('youtube.com/watch?v=')) {
+        const videoId = new URL(path).searchParams.get('v');
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      
+      // For Vimeo URLs
+      if (path.includes('vimeo.com/')) {
+        const videoId = path.split('vimeo.com/')[1].split('?')[0];
+        return `https://player.vimeo.com/video/${videoId}`;
+      }
+      
+      // Otherwise, construct the URL using the backend address
+      // This assumes your backend serves static files at the /uploads path
+      return `http://localhost:3000/uploads/${path}`;
+    } catch (error) {
+      console.error('Error processing media URL:', error);
+      return getPlaceholderUrl();
+    }
   };
   
   /**
