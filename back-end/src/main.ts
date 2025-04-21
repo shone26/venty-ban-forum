@@ -31,15 +31,6 @@ async function bootstrap() {
     .setTitle('GTA RP Ban Forum API')
     .setDescription('API documentation for the GTA RP Ban Management Forum')
     .setVersion('1.0')
-    .addBearerAuth(
-      { 
-        type: 'http', 
-        scheme: 'bearer', 
-        bearerFormat: 'JWT',
-        in: 'header' 
-      },
-      'access-token',
-    )
     .build();
   
   const document = SwaggerModule.createDocument(app, config);
