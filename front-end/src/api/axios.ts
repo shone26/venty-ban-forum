@@ -8,7 +8,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   }
 });
-
+    
 // Request interceptor for handling common request configurations
 api.interceptors.request.use(
   (config) => {

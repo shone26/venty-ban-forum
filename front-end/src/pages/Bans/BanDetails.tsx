@@ -11,7 +11,7 @@ import { Spinner } from '../../components/common/Spinner';
 import { BanDetailsPanel } from '../../components/bans/BanDetailsPanel';
 import { BanHistory } from '../../components/bans/BanHistory';
 import { AppealForm } from '../../components/bans/AppealForm';
-import { EvidenceGallery } from '../../components/bans/EvidenceGallery';
+
 import { formatDate } from '../../utils/formatDate';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '@/components/common/Modals';
@@ -157,30 +157,26 @@ const BanDetails: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <Spinner size="lg" />
-        </div>
-      
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Spinner size="lg" />
+      </div>
     );
   }
   
   // Error state
   if (error || !ban) {
     return (
-      
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {error || 'Ban not found'}
-          </h2>
-          <p className="text-gray-500 mb-6">
-            The ban you're looking for doesn't exist or couldn't be loaded.
-          </p>
-          <Button variant="primary" onClick={() => navigate('/bans')}>
-            Back to Ban List
-          </Button>
-        </div>
-      
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          {error || 'Ban not found'}
+        </h2>
+        <p className="text-gray-500 mb-6">
+          The ban you're looking for doesn't exist or couldn't be loaded.
+        </p>
+        <Button variant="primary" onClick={() => navigate('/bans')}>
+          Back to Ban List
+        </Button>
+      </div>
     );
   }
   
@@ -231,7 +227,7 @@ const BanDetails: React.FC = () => {
             >
               Back to List
             </Button>
-          </div>
+            </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -239,15 +235,6 @@ const BanDetails: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Ban details */}
             <BanDetailsPanel ban={ban} />
-            
-            {/* Evidence gallery */}
-            {ban.evidencePaths && ban.evidencePaths.length > 0 && (
-              <Card>
-                <div className="p-6">
-                  <EvidenceGallery evidencePaths={ban.evidencePaths} />
-                </div>
-              </Card>
-            )}
             
             {/* Appeals section */}
             {Array.isArray(ban.appeals) && ban.appeals.length > 0 && (

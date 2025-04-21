@@ -3,6 +3,7 @@ import { Ban } from '../../api/types';
 import { Card } from '../common/Card';
 import { formatDate, getTimeRemaining } from '../../utils/formatDate';
 import { BanStatusBadge } from './BanStatusBadge';
+import { EvidenceGallery } from './EvidenceGallery';
 
 interface BanDetailsPanelProps {
   ban: Ban;
@@ -28,6 +29,9 @@ export const BanDetailsPanel: React.FC<BanDetailsPanelProps> = ({
     }
     return ban.bannedBy?.username || 'Unknown Admin';
   };
+
+  // Check if we have evidence media
+  const hasEvidenceMedia = ban.evidencePaths && Array.isArray(ban.evidencePaths) && ban.evidencePaths.length > 0;
   
   return (
     <Card className={className}>
@@ -116,6 +120,13 @@ export const BanDetailsPanel: React.FC<BanDetailsPanelProps> = ({
             <p className="whitespace-pre-line">{ban.evidence}</p>
           </div>
         </div>
+        
+        {/* Evidence Media Gallery - Only display if we have evidence media */}
+        {hasEvidenceMedia && (
+          <div className="mb-6">
+            <EvidenceGallery evidencePaths={ban.evidencePaths} />
+          </div>
+        )}
         
         {ban.notes && (
           <div>

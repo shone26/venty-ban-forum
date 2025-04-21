@@ -25,7 +25,7 @@ import { BanQueryDto } from './dto/ban-query.dto';
       // Add a mock user ID since we removed authentication
       return this.bansService.create({
         ...createBanDto,
-        bannedBy: 'mock-admin-id', // Mock user ID
+        bannedBy: '68067a8d671f80ec7d6ec9e0', // Mock user ID
       });
     }
   
