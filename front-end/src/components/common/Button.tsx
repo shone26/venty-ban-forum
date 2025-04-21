@@ -1,59 +1,76 @@
 // src/components/common/Button.tsx
-import React from 'react';
+import React, { ButtonHTMLAttributes } from 'react';
+import { twMerge } from 'tailwind-merge';
+import Spinner from './Spinner';
 
-interface ButtonProps {
-  children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
-  size?: 'sm' | 'md' | 'lg';
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'outline' | 'ghost';
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  loading?: boolean;
+  icon?: React.ReactNode;
   fullWidth?: boolean;
-  disabled?: boolean;
-  type?: 'button' | 'submit' | 'reset';
-  onClick?: () => void;
   className?: string;
+  children?: React.ReactNode;
 }
 
 const Button: React.FC<ButtonProps> = ({
-  children,
   variant = 'primary',
   size = 'md',
+  loading = false,
+  icon,
   fullWidth = false,
-  disabled = false,
-  type = 'button',
-  onClick,
   className = '',
+  children,
+  disabled,
+  ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors';
-
-  const variantClasses = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500',
-    secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-gray-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
-    success: 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500',
-    warning: 'bg-yellow-500 hover:bg-yellow-600 text-white focus:ring-yellow-500',
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md focus:outline-none transition-colors';
+  
+  const variantStyles = {
+    primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
+    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2',
+    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2',
   };
-
-  const sizeClasses = {
-    sm: 'py-1 px-3 text-sm',
-    md: 'py-2 px-4 text-base',
-    lg: 'py-3 px-6 text-lg',
+  
+  const sizeStyles = {
+    xs: 'px-2 py-1 text-xs',
+    sm: 'px-2.5 py-1.5 text-sm',
+    md: 'px-4 py-2 text-sm',
+    lg: 'px-4 py-2 text-base',
+    xl: 'px-6 py-3 text-base',
   };
-
-  const classes = [
-    baseClasses,
-    variantClasses[variant],
-    sizeClasses[size],
-    fullWidth ? 'w-full' : '',
-    disabled ? 'opacity-50 cursor-not-allowed' : '',
-    className,
-  ].join(' ');
-
+  
+  const widthStyles = fullWidth ? 'w-full' : '';
+  
+  const disabledStyles = (disabled || loading) ? 'opacity-50 cursor-not-allowed' : '';
+  
+  const combinedClassName = twMerge(
+    baseStyles,
+    variantStyles[variant],
+    sizeStyles[size],
+    widthStyles,
+    disabledStyles,
+    className
+  );
+  
   return (
-    <button
-      type={type}
-      className={classes}
-      onClick={onClick}
-      disabled={disabled}
+    <button 
+      className={combinedClassName} 
+      disabled={disabled || loading}
+      {...props}
     >
+      {loading && (
+        <span className="mr-2">
+          <Spinner size="sm" />
+        </span>
+      )}
+      {!loading && icon && <span className="mr-2">{icon}</span>}
       {children}
     </button>
   );

@@ -1,91 +1,122 @@
 // src/components/bans/BanSearchFilters.tsx
 import React from 'react';
+import { BanStatus } from '../../types';
+
+interface BanFilters {
+  status?: string;
+  steamId?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
 
 interface BanSearchFiltersProps {
-  filters: {
-    isActive?: boolean;
-    adminId?: string;
-    // Add more filter properties as needed
-  };
-  onFilterChange: (newFilters: any) => void;
+  filters: BanFilters;
+  onFilterChange: (filters: Partial<BanFilters>) => void;
+  className?: string;
 }
 
 const BanSearchFilters: React.FC<BanSearchFiltersProps> = ({
   filters,
   onFilterChange,
+  className = '',
 }) => {
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    let isActive;
-    
-    if (value === 'all') {
-      // Remove the isActive filter
-      const { isActive, ...rest } = filters;
-      onFilterChange(rest);
-      return;
-    } else if (value === 'active') {
-      isActive = true;
-    } else if (value === 'inactive') {
-      isActive = false;
-    }
-    
-    onFilterChange({ ...filters, isActive });
+    onFilterChange({ status: e.target.value });
   };
-  
-  const getStatusValue = () => {
-    if (filters.isActive === undefined) return 'all';
-    return filters.isActive ? 'active' : 'inactive';
+
+  const handleSteamIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onFilterChange({ steamId: e.target.value });
   };
-  
+
+  const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onFilterChange({ sortBy: e.target.value });
+  };
+
+  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onFilterChange({ sortOrder: e.target.value as 'asc' | 'desc' });
+  };
+
+  const handleClearFilters = () => {
+    onFilterChange({
+      status: '',
+      steamId: '',
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    });
+  };
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-      <h3 className="text-lg font-medium text-gray-900 mb-3">Filters</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Status filter */}
-        <div>
-          <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
-            Status
-          </label>
-          <select
-            id="status-filter"
-            value={getStatusValue()}
-            onChange={handleStatusChange}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-        
-        {/* Date range filter could be added here */}
-        {/* <div>
-          <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-1">
-            Date Range
-          </label>
-          <select
-            id="date-filter"
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-          </select>
-        </div> */}
-        
-        {/* More filters could be added here */}
+    <div className={`flex flex-wrap gap-3 ${className}`}>
+      <div className="w-full sm:w-auto">
+        <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          value={filters.status || ''}
+          onChange={handleStatusChange}
+          className="w-full sm:w-auto rounded-md border-gray-300 py-2 px-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        >
+          <option value="">All Statuses</option>
+          <option value={BanStatus.ACTIVE}>Active</option>
+          <option value={BanStatus.EXPIRED}>Expired</option>
+          <option value={BanStatus.APPEALED}>Appealed</option>
+          <option value={BanStatus.REVOKED}>Revoked</option>
+        </select>
       </div>
-      
-      {/* Clear filters button */}
-      <div className="mt-4">
+
+      <div className="w-full sm:w-auto">
+        <label htmlFor="steamId" className="block text-sm font-medium text-gray-700 mb-1">
+          Steam ID
+        </label>
+        <input
+          type="text"
+          id="steamId"
+          value={filters.steamId || ''}
+          onChange={handleSteamIdChange}
+          placeholder="Filter by Steam ID"
+          className="w-full sm:w-auto rounded-md border-gray-300 py-2 px-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        />
+      </div>
+
+      <div className="w-full sm:w-auto">
+        <label htmlFor="sortBy" className="block text-sm font-medium text-gray-700 mb-1">
+          Sort By
+        </label>
+        <select
+          id="sortBy"
+          value={filters.sortBy || 'createdAt'}
+          onChange={handleSortByChange}
+          className="w-full sm:w-auto rounded-md border-gray-300 py-2 px-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        >
+          <option value="createdAt">Date Created</option>
+          <option value="playerName">Player Name</option>
+          <option value="expiresAt">Expiration Date</option>
+        </select>
+      </div>
+
+      <div className="w-full sm:w-auto">
+        <label htmlFor="sortOrder" className="block text-sm font-medium text-gray-700 mb-1">
+          Order
+        </label>
+        <select
+          id="sortOrder"
+          value={filters.sortOrder || 'desc'}
+          onChange={handleSortOrderChange}
+          className="w-full sm:w-auto rounded-md border-gray-300 py-2 px-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        >
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </div>
+
+      <div className="w-full sm:w-auto flex items-end">
         <button
           type="button"
-          onClick={() => onFilterChange({})}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          onClick={handleClearFilters}
+          className="text-sm text-gray-500 hover:text-gray-700 hover:underline py-2"
         >
-          Clear All Filters
+          Clear Filters
         </button>
       </div>
     </div>

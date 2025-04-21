@@ -1,61 +1,74 @@
 // src/components/common/SearchBar.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { twMerge } from 'tailwind-merge';
 
 interface SearchBarProps {
-  onSearch: (query: string) => void;
   placeholder?: string;
+  value: string;
+  onChange: (value: string) => void;
   className?: string;
-  initialValue?: string;
+  debounceTime?: number;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
-  onSearch,
   placeholder = 'Search...',
+  value,
+  onChange,
   className = '',
-  initialValue = '',
+  debounceTime = 500,
 }) => {
-  const [searchQuery, setSearchQuery] = useState(initialValue);
+  const [inputValue, setInputValue] = useState(value);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(searchQuery);
+  // Update local state when prop value changes
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  // Debounce the onChange callback
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (inputValue !== value) {
+        onChange(inputValue);
+      }
+    }, debounceTime);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [inputValue, onChange, debounceTime, value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleClear = () => {
+    setInputValue('');
+    onChange('');
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`w-full ${className}`}>
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <svg
-            className="w-4 h-4 text-gray-500"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 20 20"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-            />
-          </svg>
-        </div>
-        <input
-          type="search"
-          className="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500"
-          placeholder={placeholder}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="absolute right-2 bottom-1.5 top-1.5 px-3 bg-blue-600 rounded-lg text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Search
-        </button>
+    <div className={twMerge('relative', className)}>
+      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
       </div>
-    </form>
+      <input
+        type="text"
+        className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-10 text-sm placeholder-gray-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        placeholder={placeholder}
+        value={inputValue}
+        onChange={handleChange}
+      />
+      {inputValue && (
+        <button
+          type="button"
+          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+          onClick={handleClear}
+        >
+          <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+        </button>
+      )}
+    </div>
   );
 };
 

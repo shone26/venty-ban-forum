@@ -1,29 +1,26 @@
 // src/components/common/Card.tsx
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
+import { twMerge } from 'tailwind-merge';
 
-interface CardProps {
-  children: React.ReactNode;
-  title?: string;
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   className?: string;
-  headerClassName?: string;
-  bodyClassName?: string;
+  children: React.ReactNode;
 }
 
 const Card: React.FC<CardProps> = ({
-  children,
-  title,
   className = '',
-  headerClassName = '',
-  bodyClassName = '',
+  children,
+  ...props
 }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden ${className}`}>
-      {title && (
-        <div className={`px-4 py-3 bg-gray-50 border-b border-gray-200 ${headerClassName}`}>
-          <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-        </div>
+    <div 
+      className={twMerge(
+        'bg-white rounded-lg shadow border border-gray-200',
+        className
       )}
-      <div className={`p-4 ${bodyClassName}`}>{children}</div>
+      {...props}
+    >
+      {children}
     </div>
   );
 };
