@@ -1,125 +1,107 @@
-// src/routes.tsx
+// src/App.tsx
 import React from 'react';
-import { 
-  createBrowserRouter, 
-  createRoutesFromElements, 
-  Route, 
-  Navigate, 
-  Outlet 
-} from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
-import Layout from './components/layout/Layout';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 
 // Pages
-import DashboardPage from './pages/dashboard/DashboardPage';
-import BansListPage from './pages/bans/BansListPage';
+import BanListPage from './pages/bans/BanListPage';
 import BanDetailsPage from './pages/bans/BanDetailsPage';
-import CreateBanPage from './pages/bans/CreateBanPage';
-import AppealsListPage from './pages/appeals/AppealsListPage';
-import AppealDetailsPage from './pages/appeals/AppealDetailsPage';
-import LoginPage from './pages/auth/LoginPage';
-import NotFoundPage from './pages/NotFoundPage';
-import { UserRole } from './types';
+import BanFormPage from './pages/bans/BanFormPage';
+import AppealListPage from './pages/appeals/AppealListPage';
 
-// Auth wrapper component that checks for authentication
-const ProtectedRoute = ({ 
-  requiredRoles 
-}: { 
-  requiredRoles?: UserRole[] 
-}) => {
-  const { isAuthenticated, user, isLoading, hasPermission } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Loading...</h2>
-          <p>Please wait while we verify your credentials.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (requiredRoles && requiredRoles.length > 0) {
-    if (!hasPermission(requiredRoles)) {
-      return (
-        <div className="flex justify-center items-center h-screen">
-          <div className="text-center max-w-md">
-            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-            <p className="mb-4">
-              You don't have the required permissions to access this page. This area is restricted to {requiredRoles.join(' or ')} roles.
-            </p>
-            <button
-              onClick={() => window.history.back()}
-              className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700"
-            >
-              Go Back
-            </button>
+// Navigation component
+const Navigation: React.FC = () => {
+  return (
+    <nav className="bg-white shadow">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 flex items-center">
+              <Link to="/" className="text-xl font-bold text-gray-900">
+                Ban Management
+              </Link>
+            </div>
+            <div className="ml-10 flex items-baseline space-x-4">
+              <Link
+                to="/bans"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              >
+                Bans
+              </Link>
+              <Link
+                to="/appeals"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              >
+                Appeals
+              </Link>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <div className="ml-4 flex items-center md:ml-6">
+              <Link
+                to="/bans/create"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Create Ban
+              </Link>
+            </div>
           </div>
         </div>
-      );
-    }
-  }
-
-  return <Outlet />;
+      </div>
+    </nav>
+  );
 };
 
-// Guest only route (redirect if authenticated)
-const GuestRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Loading...</h2>
-          <p>Please wait...</p>
+// Footer component
+const Footer: React.FC = () => {
+  return (
+    <footer className="bg-gray-100 mt-auto">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="text-gray-600 text-sm">
+            © {new Date().getFullYear()} Ban Management System
+          </div>
+          <div className="mt-4 md:mt-0">
+            <a
+              href="#"
+              className="text-gray-600 hover:text-gray-900 text-sm"
+            >
+              Privacy Policy
+            </a>
+            <span className="mx-2 text-gray-400">|</span>
+            <a
+              href="#"
+              className="text-gray-600 hover:text-gray-900 text-sm"
+            >
+              Terms of Service
+            </a>
+          </div>
         </div>
       </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <Outlet />;
+    </footer>
+  );
 };
 
-// App Router
-const Router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route element={<Layout />}>
-      {/* Public routes */}
-      <Route path="/" element={<DashboardPage />} />
-      <Route path="/bans" element={<BansListPage />} />
-      <Route path="/bans/:id" element={<BanDetailsPage />} />
-      
-      {/* Guest-only routes */}
-      <Route element={<GuestRoute />}>
-        <Route path="/login" element={<LoginPage />} />
-      </Route>
-      
-      {/* Protected routes (any authenticated user) */}
-      <Route element={<ProtectedRoute />}>
-        {/* Routes here available to any authenticated user */}
-      </Route>
-      
-      {/* Admin/Moderator routes */}
-      <Route element={<ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.MODERATOR]} />}>
-        <Route path="/bans/create" element={<CreateBanPage />} />
-        <Route path="/appeals" element={<AppealsListPage />} />
-        <Route path="/appeals/:id" element={<AppealDetailsPage />} />
-      </Route>
-      
-      {/* 404 route */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Route>
-  )
-);
+// Main App component
+const App: React.FC = () => {
+  return (
+    <Router>
+      <div className="flex flex-col min-h-screen">
+        <Navigation />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<Navigate to="/bans" />} />
+            <Route path="/bans" element={<BanListPage />} />
+            <Route path="/bans/create" element={<BanFormPage />} />
+            <Route path="/bans/edit/:id" element={<BanFormPage />} />
+            <Route path="/bans/:id" element={<BanDetailsPage />} />
+            <Route path="/appeals" element={<AppealListPage />} />
+            <Route path="*" element={<Navigate to="/bans" />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </Router>
+  );
+};
 
-export default Router;
+export default App;

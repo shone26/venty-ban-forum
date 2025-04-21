@@ -1,383 +1,360 @@
 // src/pages/bans/BanDetailsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Spinner from '../../components/common/Spinner';
-import Modal from '../../components/common/Modal';
-import BanDetailsPanel from '../../components/bans/BanDetailsPanel';
-import BanStatusBadge from '../../components/bans/BanStatusBadge';
-import AppealForm from '../../components/appeals/AppealForm';
-import AppealStatusBadge from '../../components/appeals/AppealStatusBadge';
-import { getBanById, updateBan, deleteBan } from '../../api/bans';
-
-import { Ban, BanStatus, Appeal, CreateAppealData, AppealStatus } from '../../types';
-import { useAuth } from '../../hooks/useAuth';
-import { createAppeal } from '../../api/apeals';
-import { useToast } from '../../components/common/ToastContext';
-
+import { Ban, BanStatus, Appeal } from '../../types';
+import { bansApi, appealsApi } from '../../services/api';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
+import { Alert } from '../../components/ui/Alert';
+import { BanDetails } from '../../components/bans/BanDetails';
+import { AppealForm } from '../../components/appeals/AppealForm';
+import { AppealDetails } from '../../components/appeals/AppealDetails';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 
 const BanDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, hasPermission } = useAuth();
-  const { showToast } = useToast();
   
-  const [loading, setLoading] = useState<boolean>(true);
   const [ban, setBan] = useState<Ban | null>(null);
-  const [showAppealModal, setShowAppealModal] = useState<boolean>(false);
-  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-  const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
-  const [updatedStatus, setUpdatedStatus] = useState<BanStatus>(BanStatus.ACTIVE);
-  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
-  const [updateLoading, setUpdateLoading] = useState<boolean>(false);
-  const [appealLoading, setAppealLoading] = useState<boolean>(false);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Modal states
+  const [showAppealModal, setShowAppealModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<BanStatus | ''>('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [appealStatus, setAppealStatus] = useState<string | null>(null);
+  const [appealId, setAppealId] = useState<string | null>(null);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  
+  // Fetch ban details
   useEffect(() => {
-    if (id) {
-      fetchBanDetails();
-    }
-  }, [id]);
-
-  const fetchBanDetails = async () => {
-    try {
-      setLoading(true);
-      
+    const fetchBan = async () => {
       if (!id) return;
       
-      const data = await getBanById(id);
-      setBan(data);
-      
-      if (data.status) {
-        setUpdatedStatus(data.status as BanStatus);
+      try {
+        setLoading(true);
+        const data = await bansApi.getBanById(id);
+        setBan(data);
+        if (data.status) {
+          setSelectedStatus(data.status);
+        }
+      } catch (err: any) {
+        console.error('Error fetching ban:', err);
+        setError(err.response?.data?.message || 'Failed to fetch ban details.');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching ban details:', error);
-      showToast('error', 'Failed to load ban details');
-    } finally {
-      setLoading(false);
+    };
+    
+    fetchBan();
+  }, [id]);
+  
+  // Handle appeal submission
+  const handleAppealSubmit = async (appeal: Appeal) => {
+    try {
+      await fetchBan();
+      setShowAppealModal(false);
+    } catch (err) {
+      console.error('Error refreshing ban data:', err);
     }
   };
-
+  
+  // Handle ban deletion
   const handleDelete = async () => {
+    if (!id) return;
+    
     try {
       setDeleteLoading(true);
-      
-      if (!id) return;
-      
-      await deleteBan(id);
-      showToast('success', 'Ban deleted successfully');
+      await bansApi.deleteBan(id);
       navigate('/bans');
-    } catch (error) {
-      console.error('Error deleting ban:', error);
-      showToast('error', 'Failed to delete ban');
+    } catch (err: any) {
+      console.error('Error deleting ban:', err);
+      setError(err.response?.data?.message || 'Failed to delete ban.');
     } finally {
       setDeleteLoading(false);
       setShowDeleteModal(false);
     }
   };
-
+  
+  // Handle status update
   const handleStatusUpdate = async () => {
+    if (!id || !selectedStatus) return;
+    
     try {
-      setUpdateLoading(true);
-      
-      if (!id) return;
-      
-      const updatedBan = await updateBan(id, { status: updatedStatus });
+      setStatusUpdateLoading(true);
+      const updatedBan = await bansApi.updateBan(id, { status: selectedStatus });
       setBan(updatedBan);
-      showToast('success', 'Ban status updated successfully');
-    } catch (error) {
-      console.error('Error updating ban status:', error);
-      showToast('error', 'Failed to update ban status');
+    } catch (err: any) {
+      console.error('Error updating ban status:', err);
+      setError(err.response?.data?.message || 'Failed to update ban status.');
     } finally {
-      setUpdateLoading(false);
-      setShowUpdateModal(false);
+      setStatusUpdateLoading(false);
+      setShowStatusModal(false);
     }
   };
-
-  const handleAppealSubmit = async (appealData: CreateAppealData) => {
+  
+  // Handle appeal review (approve/reject)
+  const handleReviewSubmit = async () => {
+    if (!appealId || !appealStatus) return;
+    
     try {
-      setAppealLoading(true);
-      
-      if (!id) return;
-      
-      await createAppeal({
-        ...appealData,
-        ban: id,
+      setReviewLoading(true);
+      await appealsApi.updateAppeal(appealId, {
+        status: appealStatus as any,
+        reviewNotes,
       });
       
-      showToast('success', 'Appeal submitted successfully');
-      setShowAppealModal(false);
-      fetchBanDetails();
-    } catch (error) {
-      console.error('Error submitting appeal:', error);
-      showToast('error', 'Failed to submit appeal');
+      // If approved, also update the ban status
+      if (appealStatus === 'approved' && id) {
+        await bansApi.updateBan(id, { status: BanStatus.APPEALED });
+      }
+      
+      // Refresh the ban data to get updated appeals
+      await fetchBan();
+    } catch (err: any) {
+      console.error('Error reviewing appeal:', err);
+      setError(err.response?.data?.message || 'Failed to review appeal.');
     } finally {
-      setAppealLoading(false);
+      setReviewLoading(false);
+      setShowReviewModal(false);
+      setAppealStatus(null);
+      setAppealId(null);
+      setReviewNotes('');
     }
   };
-
-  const formatDate = (dateString: string) => {
+  
+  // Fetch the ban data again
+  const fetchBan = async () => {
+    if (!id) return;
+    
     try {
-      return format(new Date(dateString), 'PPp');
-    } catch (error) {
-      return 'Invalid date';
+      const data = await bansApi.getBanById(id);
+      setBan(data);
+      return data;
+    } catch (err: any) {
+      console.error('Error fetching ban:', err);
+      setError(err.response?.data?.message || 'Failed to fetch ban details.');
+      throw err;
     }
   };
-
+  
+  // Handle appeal actions
+  const handleApproveAppeal = (appealId: string) => {
+    setAppealId(appealId);
+    setAppealStatus('approved');
+    setShowReviewModal(true);
+  };
+  
+  const handleRejectAppeal = (appealId: string) => {
+    setAppealId(appealId);
+    setAppealStatus('rejected');
+    setShowReviewModal(true);
+  };
+  
+  // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Spinner size="lg" />
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
-
-  if (!ban) {
+  
+  // Error state
+  if (error || !ban) {
     return (
-      <div className="text-center p-8">
-        <h2 className="text-xl font-bold mb-2">Ban Not Found</h2>
-        <p className="mb-4">The ban you're looking for doesn't exist or has been removed.</p>
-        <Button 
-          variant="primary" 
-          onClick={() => navigate('/bans')}
-        >
-          Back to Ban List
-        </Button>
-      </div>
-    );
-  }
-
-  const canAppeal = isAuthenticated && 
-                    ban.status === BanStatus.ACTIVE && 
-                    !ban.appeals?.some(appeal => 
-                      appeal.status === AppealStatus.PENDING
-                    );
-                    
-  const isExpired = ban.durationType === 'temporary' && 
-                    ban.expiresAt && 
-                    new Date(ban.expiresAt) < new Date();
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Ban Details</h1>
-          <div className="flex items-center mt-2">
-            <BanStatusBadge status={ban.status} />
-            {isExpired && ban.status === BanStatus.ACTIVE && (
-              <span className="ml-2 text-amber-500 text-sm font-medium">
-                (Expired but not processed)
-              </span>
-            )}
-          </div>
-        </div>
-        
-        <div className="flex gap-2 mt-4 md:mt-0">
-          {canAppeal && (
-            <Button 
-              variant="secondary" 
-              onClick={() => setShowAppealModal(true)}
-            >
-              Submit Appeal
-            </Button>
-          )}
-          
-          {isAuthenticated && hasPermission(['admin', 'moderator']) && (
-            <>
-              <Button 
-                variant="secondary" 
-                onClick={() => setShowUpdateModal(true)}
-              >
-                Update Status
-              </Button>
-              
-              {hasPermission(['admin']) && (
-                <Button 
-                  variant="danger" 
-                  onClick={() => setShowDeleteModal(true)}
-                >
-                  Delete
-                </Button>
-              )}
-            </>
-          )}
-          
-          <Button 
-            variant="outline" 
+      <div className="container mx-auto px-4 py-8">
+        <Alert
+          variant="error"
+          title="Error"
+          message={error || 'Ban not found'}
+        />
+        <div className="mt-4">
+          <Button
+            variant="primary"
             onClick={() => navigate('/bans')}
           >
-            Back to List
+            Back to Bans
           </Button>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="col-span-1 lg:col-span-2">
-          <BanDetailsPanel ban={ban} />
-          
-          {ban.appeals && ban.appeals.length > 0 && (
-            <Card className="mt-6">
-              <div className="p-6">
-                <h2 className="text-xl font-bold mb-4">Appeals</h2>
-                <div className="space-y-4">
-                  {ban.appeals.map((appeal: Appeal) => (
-                    <div 
-                      key={appeal._id} 
-                      className="border rounded p-4"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-medium">
-                            Appeal by {typeof appeal.appealedBy === 'object' 
-                              ? appeal.appealedBy.username 
-                              : 'Unknown'
-                            }
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {formatDate(appeal.createdAt)}
-                          </p>
-                        </div>
-                        <AppealStatusBadge status={appeal.status} />
-                      </div>
-                      <p className="mb-2">{appeal.reason}</p>
-                      <div className="border-t pt-2 mt-2">
-                        <p className="text-sm font-medium">Evidence:</p>
-                        <p className="text-sm">{appeal.evidence}</p>
-                      </div>
-                      
-                      {appeal.reviewedBy && (
-                        <div className="border-t pt-2 mt-2">
-                          <p className="text-sm font-medium">
-                            Reviewed by {typeof appeal.reviewedBy === 'object' 
-                              ? appeal.reviewedBy.username 
-                              : 'Unknown'
-                            } on {formatDate(appeal.updatedAt)}
-                          </p>
-                          {appeal.reviewNotes && (
-                            <p className="text-sm">{appeal.reviewNotes}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          )}
-        </div>
-        
-        <div className="col-span-1">
-          <Card>
-            <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">Player Information</h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-500">Player Name</p>
-                  <p className="font-medium">{ban.playerName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Steam ID</p>
-                  <p className="font-medium font-mono">{ban.steamId}</p>
-                </div>
-                {ban.discordId && (
-                  <div>
-                    <p className="text-sm text-gray-500">Discord ID</p>
-                    <p className="font-medium font-mono">{ban.discordId}</p>
-                  </div>
-                )}
-                {ban.ipAddress && isAuthenticated && hasPermission(['admin', 'moderator']) && (
-                  <div>
-                    <p className="text-sm text-gray-500">IP Address</p>
-                    <p className="font-medium font-mono">{ban.ipAddress}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-        </div>
+    );
+  }
+  
+  // Success state - render ban details
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6 flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Ban Details</h1>
+        <Button
+          variant="outline"
+          onClick={() => navigate('/bans')}
+        >
+          Back to List
+        </Button>
       </div>
+      
+      {error && (
+        <Alert
+          variant="error"
+          message={error}
+          onClose={() => setError(null)}
+          className="mb-6"
+        />
+      )}
+      
+      <BanDetails
+        ban={ban}
+        onAppeal={() => setShowAppealModal(true)}
+        onEdit={() => navigate(`/bans/edit/${id}`)}
+        onDelete={() => setShowDeleteModal(true)}
+        onUpdateStatus={() => setShowStatusModal(true)}
+      />
+      
+      {/* Appeals Section */}
+      {ban.appeals && ban.appeals.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Appeals</h2>
+          <div className="space-y-6">
+            {ban.appeals.map((appeal) => (
+              <AppealDetails
+                key={appeal._id}
+                appeal={appeal}
+                onApprove={() => handleApproveAppeal(appeal._id)}
+                onReject={() => handleRejectAppeal(appeal._id)}
+                onDelete={() => {
+                  // TODO: Implement delete functionality
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Appeal Modal */}
       <Modal
-        title="Submit Appeal"
         isOpen={showAppealModal}
         onClose={() => setShowAppealModal(false)}
+        title="Submit Appeal"
+        size="lg"
       >
-        <AppealForm 
-          banId={id} 
-          onSubmit={handleAppealSubmit} 
+        <AppealForm
+          banId={id || ''}
+          onSuccess={handleAppealSubmit}
           onCancel={() => setShowAppealModal(false)}
-          isSubmitting={appealLoading}
         />
-      </Modal>
-      
-      {/* Update Status Modal */}
-      <Modal
-        title="Update Ban Status"
-        isOpen={showUpdateModal}
-        onClose={() => setShowUpdateModal(false)}
-      >
-        <div className="p-4">
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Status
-            </label>
-            <select
-              className="w-full p-2 border rounded"
-              value={updatedStatus}
-              onChange={(e) => setUpdatedStatus(e.target.value as BanStatus)}
-            >
-              <option value={BanStatus.ACTIVE}>Active</option>
-              <option value={BanStatus.EXPIRED}>Expired</option>
-              <option value={BanStatus.APPEALED}>Appealed</option>
-              <option value={BanStatus.REVOKED}>Revoked</option>
-            </select>
-          </div>
-          
-          <div className="flex justify-end gap-2 mt-6">
-            <Button
-              variant="outline"
-              onClick={() => setShowUpdateModal(false)}
-              disabled={updateLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleStatusUpdate}
-              loading={updateLoading}
-            >
-              Update Status
-            </Button>
-          </div>
-        </div>
       </Modal>
       
       {/* Delete Confirmation Modal */}
       <Modal
-        title="Delete Ban"
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
+        title="Delete Ban"
       >
         <div className="p-4">
-          <p>Are you sure you want to delete this ban? This action cannot be undone.</p>
-          
-          <div className="flex justify-end gap-2 mt-6">
+          <p className="mb-4">Are you sure you want to delete this ban? This action cannot be undone.</p>
+          <div className="flex justify-end space-x-3">
             <Button
               variant="outline"
               onClick={() => setShowDeleteModal(false)}
-              disabled={deleteLoading}
             >
               Cancel
             </Button>
             <Button
               variant="danger"
+              isLoading={deleteLoading}
               onClick={handleDelete}
-              loading={deleteLoading}
             >
-              Delete Ban
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      
+      {/* Status Update Modal */}
+      <Modal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        title="Update Ban Status"
+      >
+        <div className="p-4">
+          <div className="mb-4">
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              id="status"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value as BanStatus)}
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select status</option>
+              {Object.values(BanStatus).map((status) => (
+                <option key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowStatusModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              isLoading={statusUpdateLoading}
+              onClick={handleStatusUpdate}
+              disabled={!selectedStatus}
+            >
+              Update
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      
+      {/* Appeal Review Modal */}
+      <Modal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        title={`${appealStatus === 'approved' ? 'Approve' : 'Reject'} Appeal`}
+      >
+        <div className="p-4">
+          <div className="mb-4">
+            <label htmlFor="reviewNotes" className="block text-sm font-medium text-gray-700 mb-1">
+              Review Notes
+            </label>
+            <textarea
+              id="reviewNotes"
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+              rows={4}
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter your review notes (optional)"
+            />
+          </div>
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowReviewModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={appealStatus === 'approved' ? 'primary' : 'danger'}
+              isLoading={reviewLoading}
+              onClick={handleReviewSubmit}
+            >
+              {appealStatus === 'approved' ? 'Approve' : 'Reject'} Appeal
             </Button>
           </div>
         </div>

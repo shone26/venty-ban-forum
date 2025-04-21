@@ -1,15 +1,15 @@
-// src/App.tsx
+// src/components/RootLayout.tsx
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 
-// Pages
-import BanListPage from './pages/bans/BanListPage';
-import BanDetailsPage from './pages/bans/BanDetailsPage';
-import BanFormPage from './pages/bans/BanFormPage';
-import AppealListPage from './pages/appeals/AppealListPage';
-
-// Navigation component
 const Navigation: React.FC = () => {
+  const location = useLocation();
+  
+  const isActive = (path: string) => {
+    return location.pathname === path || 
+           (path !== '/' && location.pathname.startsWith(path));
+  };
+  
   return (
     <nav className="bg-white shadow">
       <div className="container mx-auto px-4">
@@ -23,13 +23,21 @@ const Navigation: React.FC = () => {
             <div className="ml-10 flex items-baseline space-x-4">
               <Link
                 to="/bans"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  isActive('/bans') 
+                    ? 'text-blue-700 bg-blue-50' 
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                }`}
               >
                 Bans
               </Link>
               <Link
                 to="/appeals"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  isActive('/appeals') 
+                    ? 'text-blue-700 bg-blue-50' 
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                }`}
               >
                 Appeals
               </Link>
@@ -51,7 +59,6 @@ const Navigation: React.FC = () => {
   );
 };
 
-// Footer component
 const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-100 mt-auto">
@@ -81,27 +88,16 @@ const Footer: React.FC = () => {
   );
 };
 
-// Main App component
-const App: React.FC = () => {
+const RootLayout: React.FC = () => {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navigation />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Navigate to="/bans" />} />
-            <Route path="/bans" element={<BanListPage />} />
-            <Route path="/bans/create" element={<BanFormPage />} />
-            <Route path="/bans/edit/:id" element={<BanFormPage />} />
-            <Route path="/bans/:id" element={<BanDetailsPage />} />
-            <Route path="/appeals" element={<AppealListPage />} />
-            <Route path="*" element={<Navigate to="/bans" />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <div className="flex flex-col min-h-screen">
+      <Navigation />
+      <main className="flex-grow">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
   );
 };
 
-export default App;
+export default RootLayout;

@@ -1,22 +1,25 @@
 // src/components/bans/BanForm.tsx
-import React, { useState, useEffect } from 'react';
-import { Ban, BanDuration, CreateBanData, UpdateBanData } from '../../types';
-import Button from '../common/Button';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Ban, BanDuration, BanStatus } from '../../types';
+import { Button } from '../ui/Button';
+import { Alert } from '../ui/Alert';
+import { PhotoUpload } from '../ui/PhotoUpload';
+import { bansApi } from '../../services/api';
 
 interface BanFormProps {
-  initialData?: Partial<Ban>;
-  onSubmit: (data: CreateBanData | UpdateBanData) => void;
-  onCancel: () => void;
-  isSubmitting?: boolean;
+  initialValues?: Partial<Ban>;
+  onSuccess?: (ban: Ban) => void;
+  isEdit?: boolean;
 }
 
-const BanForm: React.FC<BanFormProps> = ({
-  initialData = {},
-  onSubmit,
-  onCancel,
-  isSubmitting = false,
+export const BanForm: React.FC<BanFormProps> = ({
+  initialValues = {},
+  onSuccess,
+  isEdit = false,
 }) => {
-  const [formData, setFormData] = useState<CreateBanData | UpdateBanData>({
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState<Partial<Ban>>({
     playerName: '',
     steamId: '',
     discordId: '',
@@ -24,251 +27,281 @@ const BanForm: React.FC<BanFormProps> = ({
     reason: '',
     evidence: '',
     durationType: BanDuration.TEMPORARY,
-    durationDays: 7,
+    durationDays: 30,
     notes: '',
-    ...initialData,
+    ...initialValues,
   });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      ...initialData,
-    }));
-  }, [initialData]);
+  
+  const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
+  const [existingPhotos, setExistingPhotos] = useState<string[]>(
+    initialValues.evidencePhotos || []
+  );
+  const [removedPhotos, setRemovedPhotos] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: '',
-      }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    // Required fields
-    if (!formData.playerName) newErrors.playerName = 'Player name is required';
-    if (!formData.steamId) newErrors.steamId = 'Steam ID is required';
-    if (!formData.reason) newErrors.reason = 'Reason is required';
-    if (!formData.evidence) newErrors.evidence = 'Evidence is required';
-
-    // SteamID format (basic validation)
-    if (formData.steamId && !/^STEAM_[0-9]:[0-9]:[0-9]+$/.test(formData.steamId)) {
-      newErrors.steamId = 'Invalid Steam ID format. Example: STEAM_0:1:12345678';
-    }
-
-    // Duration days required for temporary bans
-    if (formData.durationType === BanDuration.TEMPORARY && !formData.durationDays) {
-      newErrors.durationDays = 'Duration days is required for temporary bans';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleRemoveExistingPhoto = (url: string) => {
+    setExistingPhotos(prev => prev.filter(photo => photo !== url));
+    setRemovedPhotos(prev => [...prev, url]);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
-    if (validateForm()) {
-      onSubmit(formData);
+    try {
+      const submitData = {
+        ...formData,
+        evidencePhotos: evidenceFiles,
+        removedPhotos, // Let the backend know which photos were removed
+      };
+
+      let response;
+      if (isEdit && initialValues._id) {
+        response = await bansApi.updateBan(initialValues._id, submitData);
+      } else {
+        response = await bansApi.createBan(submitData);
+      }
+
+      if (onSuccess) {
+        onSuccess(response);
+      } else {
+        navigate(`/bans/${response._id}`);
+      }
+    } catch (err: any) {
+      console.error('Error submitting ban:', err);
+      setError(err.response?.data?.message || 'Failed to submit ban. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="playerName" className="block text-sm font-medium text-gray-700">
-            Player Name *
-          </label>
-          <input
-            type="text"
-            id="playerName"
-            name="playerName"
-            value={formData.playerName}
-            onChange={handleChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 ${
-              errors.playerName ? 'border-red-300' : ''
-            }`}
-          />
-          {errors.playerName && (
-            <p className="mt-1 text-sm text-red-600">{errors.playerName}</p>
-          )}
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
+        <Alert 
+          variant="error" 
+          message={error} 
+          onClose={() => setError(null)} 
+        />
+      )}
 
-        <div>
-          <label htmlFor="steamId" className="block text-sm font-medium text-gray-700">
-            Steam ID *
-          </label>
-          <input
-            type="text"
-            id="steamId"
-            name="steamId"
-            value={formData.steamId}
-            onChange={handleChange}
-            placeholder="STEAM_0:1:12345678"
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 ${
-              errors.steamId ? 'border-red-300' : ''
-            }`}
-          />
-          {errors.steamId && (
-            <p className="mt-1 text-sm text-red-600">{errors.steamId}</p>
-          )}
-        </div>
-
-        <div>
-          <label htmlFor="discordId" className="block text-sm font-medium text-gray-700">
-            Discord ID
-          </label>
-          <input
-            type="text"
-            id="discordId"
-            name="discordId"
-            value={formData.discordId}
-            onChange={handleChange}
-            placeholder="Optional"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="ipAddress" className="block text-sm font-medium text-gray-700">
-            IP Address
-          </label>
-          <input
-            type="text"
-            id="ipAddress"
-            name="ipAddress"
-            value={formData.ipAddress}
-            onChange={handleChange}
-            placeholder="Optional"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="durationType" className="block text-sm font-medium text-gray-700">
-            Ban Type *
-          </label>
-          <select
-            id="durationType"
-            name="durationType"
-            value={formData.durationType}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-          >
-            <option value={BanDuration.TEMPORARY}>Temporary</option>
-            <option value={BanDuration.PERMANENT}>Permanent</option>
-          </select>
-        </div>
-
-        {formData.durationType === BanDuration.TEMPORARY && (
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="text-lg font-medium mb-4 text-gray-900">Player Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="durationDays" className="block text-sm font-medium text-gray-700">
-              Duration (days) *
+            <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-1">
+              Player Name <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
-              id="durationDays"
-              name="durationDays"
-              value={formData.durationDays}
+              type="text"
+              id="playerName"
+              name="playerName"
+              value={formData.playerName}
               onChange={handleChange}
-              min="1"
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 ${
-                errors.durationDays ? 'border-red-300' : ''
-              }`}
+              required
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
-            {errors.durationDays && (
-              <p className="mt-1 text-sm text-red-600">{errors.durationDays}</p>
+          </div>
+          
+          <div>
+            <label htmlFor="steamId" className="block text-sm font-medium text-gray-700 mb-1">
+              Steam ID <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="steamId"
+              name="steamId"
+              value={formData.steamId}
+              onChange={handleChange}
+              required
+              placeholder="e.g. 76561198123456789"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="discordId" className="block text-sm font-medium text-gray-700 mb-1">
+              Discord ID
+            </label>
+            <input
+              type="text"
+              id="discordId"
+              name="discordId"
+              value={formData.discordId || ''}
+              onChange={handleChange}
+              placeholder="e.g. username#1234"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="ipAddress" className="block text-sm font-medium text-gray-700 mb-1">
+              IP Address
+            </label>
+            <input
+              type="text"
+              id="ipAddress"
+              name="ipAddress"
+              value={formData.ipAddress || ''}
+              onChange={handleChange}
+              placeholder="e.g. 192.168.1.1"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">Only admins and moderators can see this information</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="text-lg font-medium mb-4 text-gray-900">Ban Details</h3>
+        
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="durationType" className="block text-sm font-medium text-gray-700 mb-1">
+                Ban Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="durationType"
+                name="durationType"
+                value={formData.durationType}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value={BanDuration.TEMPORARY}>Temporary</option>
+                <option value={BanDuration.PERMANENT}>Permanent</option>
+              </select>
+            </div>
+            
+            {formData.durationType === BanDuration.TEMPORARY && (
+              <div>
+                <label htmlFor="durationDays" className="block text-sm font-medium text-gray-700 mb-1">
+                  Duration (Days) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="durationDays"
+                  name="durationDays"
+                  value={formData.durationDays || ''}
+                  onChange={handleChange}
+                  min="1"
+                  max="365"
+                  required={formData.durationType === BanDuration.TEMPORARY}
+                  className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             )}
           </div>
-        )}
+          
+          <div>
+            <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+              Reason for Ban <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="reason"
+              name="reason"
+              value={formData.reason}
+              onChange={handleChange}
+              required
+              rows={3}
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="evidence" className="block text-sm font-medium text-gray-700 mb-1">
+              Text Evidence <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="evidence"
+              name="evidence"
+              value={formData.evidence}
+              onChange={handleChange}
+              required
+              rows={5}
+              placeholder="Describe the evidence for this ban (timestamps, chat logs, etc.)"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Photo Evidence
+            </label>
+            <PhotoUpload
+              onChange={setEvidenceFiles}
+              value={evidenceFiles}
+              existingPhotos={existingPhotos}
+              onRemoveExisting={handleRemoveExistingPhoto}
+              multiple={true}
+              maxFiles={5}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+              Admin Notes
+            </label>
+            <textarea
+              id="notes"
+              name="notes"
+              value={formData.notes || ''}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Private notes visible only to admins and moderators"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
       </div>
-
-      <div>
-        <label htmlFor="reason" className="block text-sm font-medium text-gray-700">
-          Reason for Ban *
-        </label>
-        <textarea
-          id="reason"
-          name="reason"
-          value={formData.reason}
-          onChange={handleChange}
-          rows={3}
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 ${
-            errors.reason ? 'border-red-300' : ''
-          }`}
-        />
-        {errors.reason && (
-          <p className="mt-1 text-sm text-red-600">{errors.reason}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="evidence" className="block text-sm font-medium text-gray-700">
-          Evidence *
-        </label>
-        <textarea
-          id="evidence"
-          name="evidence"
-          value={formData.evidence}
-          onChange={handleChange}
-          rows={5}
-          placeholder="Provide detailed evidence supporting this ban. Include links, screenshots, or descriptions of actions."
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 ${
-            errors.evidence ? 'border-red-300' : ''
-          }`}
-        />
-        {errors.evidence && (
-          <p className="mt-1 text-sm text-red-600">{errors.evidence}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-          Admin Notes
-        </label>
-        <textarea
-          id="notes"
-          name="notes"
-          value={formData.notes}
-          onChange={handleChange}
-          rows={3}
-          placeholder="Optional notes for admin reference"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-        />
-      </div>
-
-      <div className="flex justify-end space-x-3 pt-4">
+      
+      {isEdit && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium mb-4 text-gray-900">Ban Status</h3>
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+              Current Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={BanStatus.ACTIVE}>Active</option>
+              <option value={BanStatus.EXPIRED}>Expired</option>
+              <option value={BanStatus.APPEALED}>Appealed</option>
+              <option value={BanStatus.REVOKED}>Revoked</option>
+            </select>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex justify-end space-x-3">
         <Button
           type="button"
           variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
+          onClick={() => navigate('/bans')}
         >
           Cancel
         </Button>
         <Button
           type="submit"
           variant="primary"
-          loading={isSubmitting}
+          isLoading={isSubmitting}
         >
-          {initialData._id ? 'Update Ban' : 'Create Ban'}
+          {isEdit ? 'Update Ban' : 'Create Ban'}
         </Button>
       </div>
     </form>
   );
 };
-
-export default BanForm;
