@@ -24,7 +24,6 @@ import NotFound from './pages/NotFound';
 import SignIn from './pages/Auth/SignIn';
 import Unauthorized from './pages/Auth/Unauthorized';
 
-
 // Clerk Publishable Key
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -53,7 +52,7 @@ const router = createBrowserRouter([
       {
         path: "bans",
         element: (
-          <ProtectedRoute adminOnly={true}>
+          <ProtectedRoute>
             <BanList />
           </ProtectedRoute>
         )
@@ -61,7 +60,7 @@ const router = createBrowserRouter([
       {
         path: "bans/:id",
         element: (
-          <ProtectedRoute adminOnly={true}>
+          <ProtectedRoute>
             <BanDetails />
           </ProtectedRoute>
         )
@@ -69,7 +68,7 @@ const router = createBrowserRouter([
       {
         path: "bans/create",
         element: (
-          <ProtectedRoute adminOnly={true}>
+          <ProtectedRoute>
             <CreateBan />
           </ProtectedRoute>
         )
@@ -77,7 +76,7 @@ const router = createBrowserRouter([
       {
         path: "appeals",
         element: (
-          <ProtectedRoute adminOnly={true}>
+          <ProtectedRoute>
             <div>Appeals Page (Coming Soon)</div>
           </ProtectedRoute>
         )

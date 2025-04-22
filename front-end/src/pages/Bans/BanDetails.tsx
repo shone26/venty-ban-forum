@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Ban, AppealStatus, BanStatus } from '../../api/types';
 import BanApi from '../../api/bans';
 import AppealApi from '../../api/appeals';
+import { useAuth } from '../../hooks/useAuth'; // Import the custom useAuth hook
 
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
@@ -20,11 +21,22 @@ const BanDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user, isAdmin, hasPermission, isLoading: authLoading } = useAuth(); // Get auth data
   
   // State
   const [ban, setBan] = useState<Ban | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Log authentication info for debugging
+  useEffect(() => {
+    console.log("Auth state in BanDetails:", {
+      user,
+      isAdmin,
+      authLoading,
+      userRoles: user?.roles || []
+    });
+  }, [user, isAdmin, authLoading]);
   
   // Modal states
   const [showAppealModal, setShowAppealModal] = useState(false);
@@ -49,6 +61,7 @@ const BanDetails: React.FC = () => {
         setError(null);
         
         const banData = await BanApi.getBanById(id);
+        console.log("Fetched ban data:", banData); // Log the fetched data
         setBan(banData);
         
         // Initialize updated status
@@ -155,10 +168,31 @@ const BanDetails: React.FC = () => {
   };
   
   // Loading state
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Spinner size="lg" />
+      </div>
+    );
+  }
+
+
+
+
+
+  // If user is not admin, show unauthorized message
+  if (!isAdmin) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Unauthorized Access
+        </h2>
+        <p className="text-gray-500 mb-6">
+          You do not have permission to view this page.
+        </p>
+        <Button variant="primary" onClick={() => navigate('/')}>
+          Back to Dashboard
+        </Button>
       </div>
     );
   }

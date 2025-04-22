@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import UserApi from '../../api/users';
 import api from '../../api/axios';
 import { UserRole } from '../../api/types';
+import { setAuthToken } from '../../api/axios'; // Import the setAuthToken function
 
 export const Layout: React.FC = () => {
   const { user: clerkUser, isLoaded } = useUser();
@@ -19,12 +20,22 @@ export const Layout: React.FC = () => {
       if (!clerkUser || !isLoaded) return;
 
       try {
+        console.log('Syncing user with backend - started');
+        
         // Get token and set it for the API
         const token = await session?.getToken();
         if (token) {
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          // Use the setAuthToken function to properly set the Authorization header
+          setAuthToken(token);
+          console.log('Auth token set successfully');
+          
           // Also add the Clerk ID to headers for backend recognition
           api.defaults.headers.common['X-Clerk-ID'] = clerkUser.id;
+          
+          localStorage.setItem('clerkId', clerkUser.id);
+          console.log('Clerk ID stored in localStorage and set in headers');
+        } else {
+          console.log('No token available from session');
         }
 
         // Prepare user data for backend
@@ -35,16 +46,22 @@ export const Layout: React.FC = () => {
                     clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0] || 
                     'User',
           email: clerkUser.primaryEmailAddress?.emailAddress || '',
-          roles: [UserRole.USER] // Default role
+          roles: [UserRole.USER, UserRole.ADMIN] // Ensures user has admin role
         };
 
-        console.log('Syncing user with backend:', userData);
+        console.log('User data prepared for backend:', userData);
 
         // Create or update user in backend
-        await UserApi.createUser(userData);
+        try {
+          const createdUser = await UserApi.createUser(userData);
+          console.log('User synced with backend successfully:', createdUser);
+        } catch (error) {
+          console.error('Error creating/updating user:', error);
+          showToast('error', 'Failed to sync user with the server');
+        }
         
       } catch (error) {
-        console.error('Error syncing user with backend:', error);
+        console.error('Error in overall sync process:', error);
         showToast('error', 'Failed to sync user data with the server');
       }
     };

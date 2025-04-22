@@ -4,15 +4,18 @@ import { useUser, useClerk } from '@clerk/clerk-react';
 import { User, UserRole } from '../api/types';
 import UserApi from '../api/users';
 import api from '../api/axios';
+import { setAuthToken } from '../api/axios'; // Make sure this is imported
 
 export const useAuth = () => {
   const { user: clerkUser, isLoaded } = useUser();
   const clerk = useClerk();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Initialize authentication
   useEffect(() => {
-    const loadUserData = async () => {
+    const initAuth = async () => {
       if (!clerkUser || !isLoaded) {
         setUser(null);
         setIsLoading(false);
@@ -21,61 +24,99 @@ export const useAuth = () => {
 
       try {
         setIsLoading(true);
+        setError(null);
         
-        // Store clerk ID in localStorage for future requests
+        // 1. Store Clerk ID in localStorage
         localStorage.setItem('clerkId', clerkUser.id);
-
-        // Set clerk ID in default headers
-        api.defaults.headers.common['X-Clerk-ID'] = clerkUser.id;
+        console.log('Stored clerk ID in localStorage:', clerkUser.id);
         
-        // Get token and set it for the request
+        // 2. Get JWT token and set it in axios headers
         const token = await clerk.session?.getToken();
         if (token) {
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          setAuthToken(token);
+          console.log('Set auth token in axios headers');
+        } else {
+          console.warn('No token available from Clerk session');
         }
-
-        // Try to get current user from the backend
+        
+        // 3. Make sure the Clerk ID header is set
+        api.defaults.headers.common['X-Clerk-ID'] = clerkUser.id;
+        
+        // 4. Fetch or create user in backend
         try {
-          const currentUser = await UserApi.getCurrentUser();
-          console.log("Current user from backend:", currentUser);
-          setUser(currentUser);
-        } catch (error) {
-          console.log("User not found, creating new user");
+          console.log('Attempting to load user data from backend');
+          const backendUser = await UserApi.getCurrentUser();
+          console.log('Successfully loaded user from backend:', backendUser);
+          setUser(backendUser);
+        } catch (fetchError) {
+          console.log('User not found in backend, creating new user');
           
-          // If user not found, create a new one
+          // User not found, create a new one
           const userData = {
             clerkId: clerkUser.id,
             username: clerkUser.username || 
-                     clerkUser.fullName || 
-                     clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0] || 
-                     'User',
+                    clerkUser.fullName || 
+                    clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0] || 
+                    'User',
             email: clerkUser.primaryEmailAddress?.emailAddress || '',
-            roles: [UserRole.USER], // Default role
+            roles: [UserRole.USER], // Add ADMIN role for testing
           };
           
           const newUser = await UserApi.createUser(userData);
+          console.log('Created new user in backend:', newUser);
           setUser(newUser);
         }
-      } catch (error) {
-        console.error('Error loading user data:', error);
+      } catch (err) {
+        console.error('Error in authentication initialization:', err);
+        setError('Authentication failed. Please try again.');
         setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadUserData();
+    initAuth();
   }, [clerkUser, isLoaded]);
 
-  // Function to refresh user data (useful after role changes)
+  // Function to check if user has specific roles (case-insensitive)
+  const hasPermission = (requiredRoles: UserRole[] | string[]): boolean => {
+    if (!user || !user.roles || user.roles.length === 0) {
+      console.log('hasPermission: No user or roles available');
+      return false;
+    }
+
+    // Convert user roles to lowercase for case-insensitive comparison
+    const userRoles = user.roles.map(role => 
+      typeof role === 'string' ? role.toLowerCase() : role
+    );
+    
+    console.log('Checking permissions:', {
+      userRoles,
+      requiredRoles,
+      isAdmin: userRoles.includes('admin')
+    });
+
+    // Admin has all permissions
+    if (userRoles.includes('admin')) {
+      return true;
+    }
+
+    // Check if user has any of the required roles
+    return requiredRoles.some(role => {
+      const roleToCheck = typeof role === 'string' ? role.toLowerCase() : role;
+      return userRoles.includes(roleToCheck as UserRole);
+    });
+  };
+
+  // Function to refresh user data
   const refreshUserData = async () => {
     try {
       setIsLoading(true);
       const currentUser = await UserApi.getCurrentUser();
       setUser(currentUser);
       return currentUser;
-    } catch (error) {
-      console.error('Error refreshing user data:', error);
+    } catch (err) {
+      console.error('Error refreshing user data:', err);
       return null;
     } finally {
       setIsLoading(false);
@@ -85,7 +126,11 @@ export const useAuth = () => {
   return {
     user,
     isLoading,
-    isAdmin: user?.roles?.includes(UserRole.ADMIN) || false,
+    error,
+    isAdmin: user?.roles?.some(role => 
+      typeof role === 'string' && role.toLowerCase() === 'admin'
+    ) || false,
+    hasPermission,
     refreshUserData,
     signOut: async () => {
       await clerk.signOut();

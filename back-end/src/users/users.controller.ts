@@ -11,6 +11,7 @@ import {
   Request,
   UnauthorizedException,
   NotFoundException,
+  Headers,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -23,12 +24,11 @@ export class UsersController {
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
-    // Optional: Implement additional validation or role assignment logic
     try {
-      // Default to user role, potentially add admin logic later
+      // Optional: Add admin role for development/testing
       const userToCreate = {
         ...createUserDto,
-        roles: [UserRole.USER]
+        roles: createUserDto.roles || [UserRole.USER]
       };
 
       return await this.usersService.create(userToCreate);
@@ -41,6 +41,33 @@ export class UsersController {
   @Get()
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('me')
+  async getCurrentUser(@Headers('x-clerk-id') clerkId: string) {
+    try {
+      // Log the incoming request details
+      console.log('GET /users/me - Clerk ID from header:', clerkId);
+      
+      if (!clerkId) {
+        console.log('No clerk ID provided in header');
+        throw new UnauthorizedException('No user authenticated');
+      }
+      
+      // Try to find user by Clerk ID
+      const user = await this.usersService.findByClerkId(clerkId);
+      console.log('Found user:', {
+        id: user._id,
+        clerkId: user.clerkId,
+        username: user.username,
+        roles: user.roles
+      });
+      
+      return user;
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      throw new NotFoundException('User not found');
+    }
   }
 
   @Get(':id')
@@ -56,71 +83,5 @@ export class UsersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
-
-
-  }
-
-
-  @Get('me')
-async getCurrentUser(@Request() req) {
-  try {
-    // Get the clerkId from headers
-    const clerkId = req.headers['x-clerk-id'];
-    
-    if (!clerkId) {
-      throw new UnauthorizedException('No user authenticated');
-    }
-    
-    console.log('Fetching user with clerkId:', clerkId);
-    
-    // Try to find user by Clerk ID
-    const user = await this.usersService.findByClerkId(clerkId);
-    console.log('Found user:', user);
-    
-    return user;
-  } catch (error) {
-    console.error('Error fetching current user:', error);
-    throw new NotFoundException('User not found');
   }
 }
-
-  // @Get('me')
-  // async getCurrentUser(@Request() req) {
-  //   try {
-  //     // In a real-world scenario, you would validate the Clerk token here
-  //     // For now, retrieve user by Clerk ID from headers
-  //     const clerkId = req.headers['x-clerk-id']; 
-
-  //     if (!clerkId) {
-  //       throw new UnauthorizedException('No user authenticated');
-  //     }
-
-  //     try {
-  //       // Try to find user by Clerk ID
-  //       return await this.usersService.findByClerkId(clerkId);
-  //     } catch (notFoundError) {
-  //       // If user not found, you might want to handle this differently
-  //       throw new NotFoundException('User not found');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching current user:', error);
-  //     throw error;
-  //   }
-  }
-// Get current authenticated user 
-// @Get('me')
-// async getCurrentUser(@Request() req) {
-//   try {
-//     // In a real-world scenario, you would validate the Clerk token here
-//     // For now, this is a placeholder implementation
-//     const clerkId = req.headers['x-clerk-id']; // You'll need to pass this from the frontend
-
-//     if (!clerkId) {
-//       throw new UnauthorizedException('No user authenticated');
-//     }
-
-//     const user = await this.usersService.findByClerkId(clerkId);
-//     return user;
-//   } catch (error) {
-//     // If user not found, you might want to handle this differently
-//     throw new NotFoundException('User not found');
